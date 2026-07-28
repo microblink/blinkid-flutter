@@ -6,16 +6,38 @@ part of 'blinkid_settings.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+RequestTimeout _$RequestTimeoutFromJson(Map<String, dynamic> json) =>
+    RequestTimeout(
+      connectionTimeoutMilliseconds:
+          (json['connectionTimeoutMilliseconds'] as num?)?.toInt() ?? 10000,
+      writeTimeoutMilliseconds:
+          (json['writeTimeoutMilliseconds'] as num?)?.toInt() ?? 10000,
+      readTimeoutMilliseconds:
+          (json['readTimeoutMilliseconds'] as num?)?.toInt() ?? 10000,
+    );
+
+Map<String, dynamic> _$RequestTimeoutToJson(RequestTimeout instance) =>
+    <String, dynamic>{
+      'connectionTimeoutMilliseconds': instance.connectionTimeoutMilliseconds,
+      'writeTimeoutMilliseconds': instance.writeTimeoutMilliseconds,
+      'readTimeoutMilliseconds': instance.readTimeoutMilliseconds,
+    };
+
 BlinkIdSdkSettings _$BlinkIdSdkSettingsFromJson(Map<String, dynamic> json) =>
-    BlinkIdSdkSettings(
-      json['licenseKey'] as String,
-      json['licensee'],
-      json['downloadResources'],
-      json['resourceDownloadUrl'],
-      json['resourceLocalFolder'],
-      json['resourceRequestTimeout'],
-      json['microblinkProxyURL'],
-    )..bundleIdentifier = json['bundleIdentifier'] as String?;
+    BlinkIdSdkSettings(json['licenseKey'] as String)
+      ..licensee = json['licensee'] as String?
+      ..downloadResources = json['downloadResources'] as bool?
+      ..resourceDownloadUrl = json['resourceDownloadUrl'] as String?
+      ..resourceLocalFolder = json['resourceLocalFolder'] as String?
+      ..bundleIdentifier = json['bundleIdentifier'] as String?
+      ..resourceRequestTimeout = json['resourceRequestTimeout'] == null
+          ? null
+          : RequestTimeout.fromJson(
+              Map<String, dynamic>.from(
+                json['resourceRequestTimeout'] as Map,
+              ),
+            )
+      ..microblinkProxyURL = json['microblinkProxyURL'] as String?;
 
 Map<String, dynamic> _$BlinkIdSdkSettingsToJson(BlinkIdSdkSettings instance) =>
     <String, dynamic>{
@@ -25,7 +47,7 @@ Map<String, dynamic> _$BlinkIdSdkSettingsToJson(BlinkIdSdkSettings instance) =>
       'resourceDownloadUrl': instance.resourceDownloadUrl,
       'resourceLocalFolder': instance.resourceLocalFolder,
       'bundleIdentifier': instance.bundleIdentifier,
-      'resourceRequestTimeout': instance.resourceRequestTimeout,
+      'resourceRequestTimeout': instance.resourceRequestTimeout?.toJson(),
       'microblinkProxyURL': instance.microblinkProxyURL,
     };
 

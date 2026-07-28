@@ -1,6 +1,42 @@
 import 'package:json_annotation/json_annotation.dart';
 part 'blinkid_settings.g.dart';
 
+/// Network timeouts used when the SDK downloads on-device processing resources.
+///
+/// Values are in milliseconds. On Android BlinkID 7.7.x the native default is
+/// 10000 ms for each timeout. Passing `null` from [BlinkIdSdkSettings] keeps
+/// that native default.
+@JsonSerializable()
+class RequestTimeout {
+  /// Timeout for establishing the TCP connection to the resource host.
+  final int connectionTimeoutMilliseconds;
+
+  /// Timeout for individual write IO operations.
+  final int writeTimeoutMilliseconds;
+
+  /// Timeout applied to the TCP socket and read IO operations.
+  final int readTimeoutMilliseconds;
+
+  const RequestTimeout({
+    this.connectionTimeoutMilliseconds = 10000,
+    this.writeTimeoutMilliseconds = 10000,
+    this.readTimeoutMilliseconds = 10000,
+  });
+
+  /// Convenience constructor that applies the same duration to all timeouts.
+  const RequestTimeout.all(int timeoutMilliseconds)
+      : connectionTimeoutMilliseconds = timeoutMilliseconds,
+        writeTimeoutMilliseconds = timeoutMilliseconds,
+        readTimeoutMilliseconds = timeoutMilliseconds;
+
+  /// Matches Android BlinkID 7.7.1 `RequestTimeout.DEFAULT` (10 seconds).
+  static const RequestTimeout defaultTimeout = RequestTimeout();
+
+  factory RequestTimeout.fromJson(Map<String, dynamic> json) =>
+      _$RequestTimeoutFromJson(json);
+  Map<String, dynamic> toJson() => _$RequestTimeoutToJson(this);
+}
+
 /// Settings for the initialization of the BlinkID SDK.
 @JsonSerializable()
 class BlinkIdSdkSettings {
@@ -29,7 +65,12 @@ class BlinkIdSdkSettings {
   String? bundleIdentifier;
 
   /// Timeout settings for resource downloads.
-  int? resourceRequestTimeout;
+  ///
+  /// Serialized to the native Android `RequestTimeout` map
+  /// (`connectionTimeoutMilliseconds`, `writeTimeoutMilliseconds`,
+  /// `readTimeoutMilliseconds`). Leave `null` to use the native default
+  /// (10 seconds on BlinkID Android 7.7.1).
+  RequestTimeout? resourceRequestTimeout;
 
   /// Set a custom HTTPS URL to be used as a proxy for Ping and license checks.
   /// The proxy URL will be applied only if the license has the appropriate rights.

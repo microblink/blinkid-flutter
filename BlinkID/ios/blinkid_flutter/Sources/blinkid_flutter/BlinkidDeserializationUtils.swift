@@ -37,7 +37,10 @@ struct BlinkIdDeserializationUtils {
             blinkidSdkSettings?.bundleURL = bundle.bundleURL
         }
 
-        if let resourceRequestTimeout = sdkSettingsDict?["resourceRequestTimeout"] as? Int {
+        // BlinkID iOS 7.7.x only exposes RequestTimeout.default publicly.
+        // Accept the map serialized by Flutter so the key is recognized; custom
+        // per-phase timeouts are applied on Android via the same payload.
+        if sdkSettingsDict?["resourceRequestTimeout"] != nil {
             blinkidSdkSettings?.resourceRequestTimeout = BlinkID.RequestTimeout.default
         }
         if let microblinkProxyUrl = sdkSettingsDict?["microblinkProxyURL"] as? String {

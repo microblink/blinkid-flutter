@@ -129,9 +129,9 @@ object BlinkIdDeserializationUtils {
     private fun deserializeResourceRequestTimeout(resourceRequestTimeoutMap: Map<String, Any>?): RequestTimeout {
         if (resourceRequestTimeoutMap == null) return RequestTimeout.DEFAULT
         return RequestTimeout(
-            connectionTimeoutMillis = resourceRequestTimeoutMap["connectionTimeoutMilliseconds"] as? Int ?: 10000,
-            writeTimeoutMillis = resourceRequestTimeoutMap["writeTimeoutMilliseconds"] as? Int ?: 10000,
-            readTimeoutMillis = resourceRequestTimeoutMap["readTimeoutMilliseconds"] as? Int ?: 10000
+            connectionTimeoutMillis = (resourceRequestTimeoutMap["connectionTimeoutMilliseconds"] as? Number)?.toInt() ?: 10000,
+            writeTimeoutMillis = (resourceRequestTimeoutMap["writeTimeoutMilliseconds"] as? Number)?.toInt() ?: 10000,
+            readTimeoutMillis = (resourceRequestTimeoutMap["readTimeoutMilliseconds"] as? Number)?.toInt() ?: 10000
         )
     }
 
