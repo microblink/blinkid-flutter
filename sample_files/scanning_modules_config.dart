@@ -60,8 +60,8 @@ class ScanningModulesConfig {
       fields: [FieldType.firstName, FieldType.lastName],
       documentFilter: [
         DocumentFilter(
-          country: Country.croatia,
-          documentType: DocumentType.id,
+          country: CountryID.croatia,
+          documentType: DocumentTypeID.id,
         ),
       ],
     );

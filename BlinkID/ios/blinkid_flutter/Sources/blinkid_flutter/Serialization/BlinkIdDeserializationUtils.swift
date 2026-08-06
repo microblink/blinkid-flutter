@@ -508,11 +508,9 @@ struct BlinkIdDeserializationUtils {
         let type = filteredClass["documentType"] as? String
         let region = filteredClass["region"] as? String
         
-        let countryMatches = country == nil || classInfo.country == Country(rawValue: country!)
-        let typeMatches = type == nil || classInfo.documentType == DocumentType(rawValue: type!)
-        let regionMatches = region == nil || classInfo.region == Region(rawValue: region!)
-        
-        return countryMatches && typeMatches && regionMatches
+        return (country == nil || classInfo.country?.countryId == CountryID(rawValue: country!)) &&
+            (type == nil || classInfo.documentType?.documentTypeId == DocumentTypeID(rawValue: type!)) &&
+            (region == nil || classInfo.region?.regionId == RegionID(rawValue: region!))
     }
 
     static func toStringKeyedMap(_ value: Any?) -> [String: Any]? {

@@ -4,10 +4,10 @@ import android.graphics.BitmapFactory
 import android.os.Parcelable
 import com.microblink.blinkid.core.BlinkIdSdkSettings
 import com.microblink.blinkid.core.result.FieldType
-import com.microblink.blinkid.core.result.classinfo.Country
+import com.microblink.blinkid.core.result.classinfo.CountryId
 import com.microblink.blinkid.core.result.classinfo.DocumentClassInfo
-import com.microblink.blinkid.core.result.classinfo.Region
-import com.microblink.blinkid.core.result.classinfo.Type
+import com.microblink.blinkid.core.result.classinfo.RegionId
+import com.microblink.blinkid.core.result.classinfo.DocumentTypeId
 import com.microblink.blinkid.core.session.BlinkIdSessionSettings
 import com.microblink.blinkid.core.session.ScanningMode
 import com.microblink.blinkid.core.settings.DocumentFilter
@@ -198,22 +198,12 @@ object BlinkIdDeserializationUtils {
     }
 
     private fun deserializeDocumentFilter(documentFilterMap: Map<String, Any>?): DocumentFilter {
-        return if (documentFilterMap != null) {
-            val filter = DocumentFilter()
-
-            (documentFilterMap["country"] as? String)?.let {
-                filter.country = enumValueOf<Country>(it.replaceFirstChar { char -> char.uppercase() })
-            }
-            (documentFilterMap["region"] as? String)?.let {
-                filter.region = enumValueOf<Region>(it.replaceFirstChar { char -> char.uppercase() })
-            }
-            (documentFilterMap["documentType"] as? String)?.let {
-                filter.type = enumValueOf<Type>(it.replaceFirstChar { char -> char.uppercase() })
-            }
-            filter
-        } else {
-            DocumentFilter()
-        }
+        if (documentFilterMap == null) return DocumentFilter()
+        return DocumentFilter(
+            country = (documentFilterMap["country"] as? String)?.let(::parseCountryId),
+            region = (documentFilterMap["region"] as? String)?.let(::parseRegionId),
+            type = (documentFilterMap["documentType"] as? String)?.let(::parseDocumentTypeId),
+        )
     }
 
     private fun deserializeRedactionMode(value: String?): RedactionMode {
@@ -319,9 +309,9 @@ object BlinkIdDeserializationUtils {
         documentFilter: DocumentFilter,
         classInfo: DocumentClassInfo,
     ): Boolean {
-        return matchesFilterField(documentFilter.country, Country.None, classInfo.country) &&
-            matchesFilterField(documentFilter.region, Region.None, classInfo.region) &&
-            matchesFilterField(documentFilter.type, Type.None, classInfo.type)
+        return matchesFilterField(documentFilter.country, CountryId.None, classInfo.country?.id) &&
+            matchesFilterField(documentFilter.region, RegionId.None, classInfo.region?.id) &&
+            matchesFilterField(documentFilter.type, DocumentTypeId.None, classInfo.documentType?.id)
     }
 
     private fun <T> matchesFilterField(
@@ -416,10 +406,17 @@ object BlinkIdDeserializationUtils {
         val region = filteredClass["region"] as? String
         val documentType = filteredClass["documentType"] as? String
 
-        return (country == null || enumValueOf<Country>(country.replaceFirstChar { char -> char.uppercase() }) == classInfo.country) &&
-                (region == null || enumValueOf<Region>(region.replaceFirstChar { char -> char.uppercase() }) == classInfo.region) &&
-                (documentType == null || enumValueOf<Type>(documentType.replaceFirstChar { char -> char.uppercase() }) == classInfo.type)
+        return (country == null || parseCountryId(country) == classInfo.country?.id) &&
+            (region == null || parseRegionId(region) == classInfo.region?.id) &&
+            (documentType == null || parseDocumentTypeId(documentType) == classInfo.documentType?.id)
     }
+
+    private fun parseCountryId(value: String): CountryId? =
+        CountryId.entries.find { it.name.equals(value, ignoreCase = true) }
+    private fun parseRegionId(value: String): RegionId? =
+        RegionId.entries.find { it.name.equals(value, ignoreCase = true) }
+    private fun parseDocumentTypeId(value: String): DocumentTypeId? =
+        DocumentTypeId.entries.find { it.name.equals(value, ignoreCase = true) }
 
     fun base64ToBitmap(base64Str: String?): Bitmap? {
         return try {
@@ -502,8 +499,8 @@ private class CustomRedactionSettingsResolver(
             if (shouldUseRedactionSettings(entry.documentFilters, classInfo)) {
                 Log.i(
                     BlinkIdDeserializationUtils.TAG,
-                    "resolveRedactionSettings matched class=${classInfo.country}/" +
-                        "${classInfo.region}/${classInfo.type}, mode=${entry.settings.redactionMode}, " +
+                    "resolveRedactionSettings matched class=${classInfo.country?.id}/" +
+                        "${classInfo.region?.id}/${classInfo.documentType?.id}, mode=${entry.settings.redactionMode}, " +
                         "fields=${entry.settings.fields.size}",
                 )
                 return entry.settings
@@ -511,8 +508,8 @@ private class CustomRedactionSettingsResolver(
         }
         Log.i(
             BlinkIdDeserializationUtils.TAG,
-            "resolveRedactionSettings no matching entry for class=${classInfo.country}/" +
-                "${classInfo.region}/${classInfo.type}, " +
+            "resolveRedactionSettings no matching entry for class=${classInfo.country?.id}/" +
+                "${classInfo.region?.id}/${classInfo.documentType?.id}, " +
                 "filters=${entries.map { entry ->
                     entry.documentFilters.map { filter ->
                         "${filter.country}/${filter.region}/${filter.documentType}"

@@ -371,8 +371,8 @@ class ClassFilter {
   ///  ```
   ///   final classFilter = ClassFilter();
   ///    classFilter.includeDocuments = [
-  ///      DocumentFilter.country(Country.usa),
-  ///      DocumentFilter.countryType(Country.croatia, DocumentType.id),
+  ///      DocumentFilter(country: CountryID.usa),
+  ///      DocumentFilter(country: CountryID.croatia, documentType: DocumentTypeID.id),
   ///    ];
   ///
   ///    await blinkIdPlugin.performScan(sdkSettings, sessionSettings classFilter)
@@ -397,8 +397,8 @@ class ClassFilter {
   ///  ```
   ///   final classFilter = ClassFilter();
   ///    classFilter.excludeDocuments = [
-  ///      DocumentFilter.country(Country.usa),
-  ///      DocumentFilter.countryType(Country.croatia, DocumentType.id),
+  ///      DocumentFilter(country: CountryID.usa),
+  ///      DocumentFilter(country: CountryID.croatia, documentType: DocumentTypeID.id),
   ///    ];
   ///
   ///    await blinkIdPlugin.performScan(sdkSettings, sessionSettings classFilter)
@@ -531,15 +531,15 @@ class DetailedFieldType {
 class DocumentFilter {
   /// If set, only specified country will pass the filter criteria.
   /// Otherwise, issuing country will not be taken into account.
-  Country? country;
+  CountryID? country;
 
   /// If set, only specified country will pass the filter criteria.
   /// Otherwise, issuing region will not be taken into account.
-  Region? region;
+  RegionID? region;
 
   /// If set, only specified type will pass the filter criteria. Otherwise, issuing type will not be taken into
   /// account.
-  DocumentType? documentType;
+  DocumentTypeID? documentType;
 
   /// Represents the document filter.
   /// Used with other classes like the [ClassFilter], [DocumentRules] and the [DocumentAnonymizationSettings].
@@ -547,11 +547,15 @@ class DocumentFilter {
   /// All parameters are optional, and do not need to be added.
   /// The filter can be set to be more generic (for example, to only accept document from USA):
   /// ```
-  /// DocumentFilter(Country.usa);
+  /// DocumentFilter(country: CountryID.usa);
   /// ```
   /// or, it can be set to be more specific (for example, to specifically accept USA drivers licenses from California):
   /// ```
-  /// DocumentFilter(Country.usa, Region.california, DocumentType.dl);
+  /// DocumentFilter(
+  ///   country: CountryID.usa,
+  ///   region: RegionID.california,
+  ///   documentType: DocumentTypeID.dl,
+  /// );
   /// ```
   DocumentFilter({this.country, this.region, this.documentType});
   factory DocumentFilter.fromJson(Map<String, dynamic> json) =>
@@ -668,7 +672,7 @@ enum AlphabetType {
 }
 
 /// Document country.
-enum Country {
+enum CountryID {
   @JsonValue("none")
   none,
   @JsonValue("albania")
@@ -1186,7 +1190,7 @@ enum Country {
 }
 
 /// Document region.
-enum Region {
+enum RegionID {
   @JsonValue("none")
   none,
   @JsonValue("alabama")
@@ -1490,7 +1494,7 @@ enum Region {
 }
 
 /// Document type.
-enum DocumentType {
+enum DocumentTypeID {
   @JsonValue("none")
   none,
   @JsonValue("consularId")
@@ -1838,6 +1842,45 @@ enum PreferredCamera {
   front,
 }
 
+/// Document country classification from [DocumentClassInfo].
+///
+/// When known at SDK build time, both [id] and [rawValue] are set.
+/// For OTA / unknown documents, [id] may be omitted while [rawValue] remains.
+/// A missing country means [DocumentClassInfo.country] is null (native `"NONE"`).
+class Country {
+  CountryID? id;
+  String rawValue;
+  Country({this.id, required this.rawValue});
+  factory Country.fromNativeMap(Map<String, dynamic> map) {
+    return Country(
+      id: enumFromValue(CountryID.values.toList(), map['id']),
+      rawValue: map['rawValue'] as String? ?? '',
+    );
+  }
+}
+class Region {
+  RegionID? id;
+  String rawValue;
+  Region({this.id, required this.rawValue});
+  factory Region.fromNativeMap(Map<String, dynamic> map) {
+    return Region(
+      id: enumFromValue(RegionID.values.toList(), map['id']),
+      rawValue: map['rawValue'] as String? ?? '',
+    );
+  }
+}
+class DocumentType {
+  DocumentTypeID? id;
+  String rawValue;
+  DocumentType({this.id, required this.rawValue});
+  factory DocumentType.fromNativeMap(Map<String, dynamic> map) {
+    return DocumentType(
+      id: enumFromValue(DocumentTypeID.values.toList(), map['id']),
+      rawValue: map['rawValue'] as String? ?? '',
+    );
+  }
+}
+
 /// Represents the document class information.
 class DocumentClassInfo {
   /// The document country.
@@ -1873,15 +1916,20 @@ class DocumentClassInfo {
 
   /// Represents the document class information.
   DocumentClassInfo(Map<String, dynamic> nativeClassInfo) {
-    country = enumFromValue(
-      Country.values.toList(),
-      nativeClassInfo['country'],
-    );
-    region = enumFromValue(Region.values.toList(), nativeClassInfo['region']);
-    documentType = enumFromValue(
-      DocumentType.values.toList(),
-      nativeClassInfo['documentType'],
-    );
+    final countryMap = nativeClassInfo['country'];
+    if (countryMap is Map) {
+      country = Country.fromNativeMap(Map<String, dynamic>.from(countryMap));
+    }
+    final regionMap = nativeClassInfo['region'];
+    if (regionMap is Map) {
+      region = Region.fromNativeMap(Map<String, dynamic>.from(regionMap));
+    }
+    final documentTypeMap = nativeClassInfo['documentType'];
+    if (documentTypeMap is Map) {
+      documentType = DocumentType.fromNativeMap(
+        Map<String, dynamic>.from(documentTypeMap),
+      );
+    }
     empty = nativeClassInfo['empty'];
     countryName = nativeClassInfo['countryName'];
     isoNumericCountryCode = nativeClassInfo['isoNumericCountryCode'];
