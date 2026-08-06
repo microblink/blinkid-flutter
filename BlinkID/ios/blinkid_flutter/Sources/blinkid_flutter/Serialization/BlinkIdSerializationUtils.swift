@@ -244,7 +244,7 @@ class BlinkIdSerializationUtils {
             "isoNumericCountryCode": documentClassInfo.isoNumericCountryCode,
             "isoAlpha2CountryCode": documentClassInfo.isoAlpha2CountryCode,
             "isoAlpha3CountryCode": documentClassInfo.isoAlpha3CountryCode,
-            "empty": documentClassInfo.isEmpty()  // JSON key "empty"; iOS may still have isEmpty()
+            "empty": documentClassInfo.isEmpty()
         ]
         if let country = documentClassInfo.country {
             result["country"] = serializeClassInfoComponent(

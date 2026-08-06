@@ -82,6 +82,11 @@ class BarcodeModuleSettings {
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
   bool dataMatrixScanningEnabled;
 
+  /// Enables the scanning and processing of Aztec barcodes.
+  ///
+  /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
+  bool aztecScanningEnabled;
+
   BarcodeModuleSettings({
     this.presenceMandatory = false,
     this.barcodeImageReturnEnabled = false,
@@ -95,6 +100,7 @@ class BarcodeModuleSettings {
     this.ean13ScanningEnabled = false,
     this.itfScanningEnabled = false,
     this.dataMatrixScanningEnabled = false,
+    this.aztecScanningEnabled = false,
   });
 
   factory BarcodeModuleSettings.fromJson(Map<String, dynamic> json) =>

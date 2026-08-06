@@ -170,6 +170,7 @@ object BlinkIdDeserializationUtils {
             ean13ScanningEnabled = map["ean13ScanningEnabled"] as? Boolean ?: false,
             itfScanningEnabled = map["itfScanningEnabled"] as? Boolean ?: false,
             dataMatrixScanningEnabled = map["dataMatrixScanningEnabled"] as? Boolean ?: false,
+            aztecScanningEnabled = map["aztecScanningEnabled"] as? Boolean ?: false,
         )
     }
 

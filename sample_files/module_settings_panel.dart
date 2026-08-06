@@ -262,6 +262,12 @@ class _BarcodeModuleCard extends StatelessWidget {
           onChanged: (v) =>
               _updateBarcode((s) => s.dataMatrixScanningEnabled = v),
         ),
+        SampleBoolSettingTile(
+          title: 'Aztec',
+          value: b.aztecScanningEnabled,
+          onChanged: (v) =>
+              _updateBarcode((s) => s.aztecScanningEnabled = v),
+        ),
       ],
     );
   }

@@ -23,6 +23,7 @@ BarcodeModuleSettings _$BarcodeModuleSettingsFromJson(
   itfScanningEnabled: json['itfScanningEnabled'] as bool? ?? false,
   dataMatrixScanningEnabled:
       json['dataMatrixScanningEnabled'] as bool? ?? false,
+  aztecScanningEnabled: json['aztecScanningEnabled'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$BarcodeModuleSettingsToJson(
@@ -40,6 +41,7 @@ Map<String, dynamic> _$BarcodeModuleSettingsToJson(
   'ean13ScanningEnabled': instance.ean13ScanningEnabled,
   'itfScanningEnabled': instance.itfScanningEnabled,
   'dataMatrixScanningEnabled': instance.dataMatrixScanningEnabled,
+  'aztecScanningEnabled': instance.aztecScanningEnabled,
 };
 
 DocumentCaptureModuleSettings _$DocumentCaptureModuleSettingsFromJson(

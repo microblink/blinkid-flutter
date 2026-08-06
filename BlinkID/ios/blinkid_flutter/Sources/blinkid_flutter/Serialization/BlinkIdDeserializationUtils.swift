@@ -176,6 +176,10 @@ struct BlinkIdDeserializationUtils {
         if let dataMatrixScanningEnabled = barcodeModuleDict["dataMatrixScanningEnabled"] as? Bool {
             barodeModuleSettings.dataMatrixScanningEnabled = dataMatrixScanningEnabled
         }
+
+        if let aztecScanningEnabled = barcodeModuleDict["aztecScanningEnabled"] as? Bool {
+            barodeModuleSettings.aztecScanningEnabled = aztecScanningEnabled
+        }
         
         if let ean13ScanningEnabled = barcodeModuleDict["ean13ScanningEnabled"] as? Bool {
             barodeModuleSettings.ean13ScanningEnabled = ean13ScanningEnabled
