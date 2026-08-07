@@ -32,6 +32,7 @@ class BlinkIdResultBuilder {
         buildResult(result.personalIdNumber, "Personal Id Number") +
         buildResult(result.profession, "Profession") +
         buildResult(result.race, "Race") +
+        buildResult(result.ethnicity, "Ethnicity") +
         buildResult(result.religion, "Religion") +
         buildResult(result.residentialStatus, "Residential Status") +
         buildResult(result.countryCode, "Country code") +
@@ -189,6 +190,7 @@ class BlinkIdResultBuilder {
         buildResult(result.personalIdNumber, "Personal ID number") +
         buildResult(result.profession, "Profession") +
         buildResult(result.race, "Race") +
+        buildResult(result.ethnicity, "Ethnicity") +
         buildResult(result.religion, "Religion") +
         buildResult(result.remarks, "Remarks") +
         buildResult(result.residencePermitType, "Residence permit type") +

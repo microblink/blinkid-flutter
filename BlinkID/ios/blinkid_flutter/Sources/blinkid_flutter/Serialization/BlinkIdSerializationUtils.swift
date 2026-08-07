@@ -60,6 +60,9 @@ class BlinkIdSerializationUtils {
             if let race = scanningResult.race {
                 scanningResultDict["race"] = serializeStringResult(race)
             }
+            if let ethnicity = scanningResult.ethnicity {
+                scanningResultDict["ethnicity"] = serializeStringResult(ethnicity)
+            }
             if let religion = scanningResult.religion {
                 scanningResultDict["religion"] = serializeStringResult(religion)
             }
@@ -687,6 +690,9 @@ class BlinkIdSerializationUtils {
             if let race = vizResult.race {
                 vizResultDict["race"] = serializeStringResult(race)
             }
+            if let ethnicity = vizResult.ethnicity {
+                vizResultDict["ethnicity"] = serializeStringResult(ethnicity)
+            }
             if let religion = vizResult.religion {
                 vizResultDict["religion"] = serializeStringResult(religion)
             }
@@ -876,6 +882,9 @@ class BlinkIdSerializationUtils {
         }
         if let lastName = parentInfo.lastName {
             parentInfoDict["lastName"] = serializeStringResult(lastName)
+        }
+        if let fullName = parentInfo.fullName {
+            parentInfoDict["fullName"] = serializeStringResult(fullName)
         }
         return parentInfoDict
     }

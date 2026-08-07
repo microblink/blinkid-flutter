@@ -296,6 +296,8 @@ const _$FieldTypeEnumMap = {
   FieldType.legalStatus: 'legalStatus',
   FieldType.husbandName: 'husbandName',
   FieldType.cardAccessNumber: 'cardAccessNumber',
+  FieldType.parentFullName: 'parentFullName',
+  FieldType.ethnicity: 'ethnicity',
 };
 
 const _$RedactionModeEnumMap = {

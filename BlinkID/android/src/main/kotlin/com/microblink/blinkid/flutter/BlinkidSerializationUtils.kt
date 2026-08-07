@@ -79,6 +79,9 @@ object BlinkIdSerializationUtils {
         scanningResult?.race?.let {
             scanningResultDict["race"] = serializeStringResult(it)
         }
+        scanningResult?.ethnicity?.let {
+            scanningResultDict["ethnicity"] = serializeStringResult(it)
+        }
         scanningResult?.religion?.let {
             scanningResultDict["religion"] = serializeStringResult(it)
         }
@@ -600,6 +603,9 @@ object BlinkIdSerializationUtils {
         vizResult?.race?.let {
             vizResultDict["race"] = serializeStringResult(it)
         }
+        vizResult?.ethnicity?.let {
+            vizResultDict["ethnicity"] = serializeStringResult(it)
+        }
         vizResult?.religion?.let {
             vizResultDict["religion"] = serializeStringResult(it)
         }
@@ -786,6 +792,9 @@ object BlinkIdSerializationUtils {
         }
         parentInfo.lastName?.let {
             parentInfoDict["lastName"] = serializeStringResult(it)
+        }
+        parentInfo.fullName?.let {
+            parentInfoDict["fullName"] = serializeStringResult(it)
         }
         return parentInfoDict
     }

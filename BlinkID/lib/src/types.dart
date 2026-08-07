@@ -1869,6 +1869,10 @@ enum FieldType {
   husbandName,
   @JsonValue("cardAccessNumber")
   cardAccessNumber,
+  @JsonValue("parentFullName")
+  parentFullName,
+  @JsonValue("ethnicity")
+  ethnicity,
 }
 
 /// An enum indicating preffered camera position for document capturing.
@@ -2531,6 +2535,9 @@ class VizResult {
   /// The race of the document owner.
   StringResult? race;
 
+  /// The ethnicity of the document owner.
+  StringResult? ethnicity;
+
   /// The religion of the document owner.
   StringResult? religion;
 
@@ -2704,6 +2711,7 @@ class VizResult {
     placeOfBirth = createStringResult(nativeVizResult, 'placeOfBirth');
     nationality = createStringResult(nativeVizResult, 'nationality');
     race = createStringResult(nativeVizResult, 'race');
+    ethnicity = createStringResult(nativeVizResult, 'ethnicity');
     religion = createStringResult(nativeVizResult, 'religion');
     profession = createStringResult(nativeVizResult, 'profession');
     maritalStatus = createStringResult(nativeVizResult, 'maritalStatus');
@@ -4111,9 +4119,13 @@ class ParentInfo {
   /// The last name of one of the document owner's parents.
   StringResult? lastName;
 
+  /// The full name of one of the document owner's parents.
+  StringResult? fullName;
+
   ParentInfo(Map<String, dynamic> nativeParentInfo) {
     firstName = createStringResult(nativeParentInfo, 'firstName');
     lastName = createStringResult(nativeParentInfo, 'lastName');
+    fullName = createStringResult(nativeParentInfo, 'fullName');
   }
 }
 
