@@ -395,11 +395,26 @@ class _DocumentCaptureModuleCard extends StatelessWidget {
           onChanged: (v) => _update((s) => s.extensionFactor = v),
         ),
         SampleSectionLabel('Direct API'),
-        SampleBoolSettingTile(
-          title: 'Input image cropped',
-          subtitle: 'For pre-cropped Direct API images only',
-          value: d.inputImageCropped,
-          onChanged: (v) => _update((s) => s.inputImageCropped = v),
+        SampleEnumDropdown<InputImageCropType>(
+          label: 'Input image crop type',
+          value: d.cropType,
+          options: InputImageCropType.values,
+          onChanged: (v) => _update((s) => s.cropType = v),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Text(
+            'cropped / unknown: DirectAPI only. Camera requires not-cropped.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        SampleEnumDropdown<InputImageSelectionStrategy>(
+          label: 'Input image selection strategy',
+          value: d.inputImageSelectionStrategy,
+          options: InputImageSelectionStrategy.values,
+          onChanged: (v) => _update((s) => s.inputImageSelectionStrategy = v),
         ),
         _DoubleSettingField(
           label: 'Input image margin',

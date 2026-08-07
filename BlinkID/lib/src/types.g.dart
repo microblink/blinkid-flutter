@@ -47,7 +47,9 @@ Map<String, dynamic> _$BarcodeModuleSettingsToJson(
 DocumentCaptureModuleSettings _$DocumentCaptureModuleSettingsFromJson(
   Map<String, dynamic> json,
 ) => DocumentCaptureModuleSettings(
-  inputImageCropped: json['inputImageCropped'] as bool? ?? false,
+  cropType:
+      $enumDecodeNullable(_$InputImageCropTypeEnumMap, json['cropType']) ??
+      InputImageCropType.notCropped,
   unsupportedDocumentsAllowed:
       json['unsupportedDocumentsAllowed'] as bool? ?? false,
   secondSideWithNoExtractableDataSkipped:
@@ -87,12 +89,18 @@ DocumentCaptureModuleSettings _$DocumentCaptureModuleSettingsFromJson(
       json['imageWithPoorLightingRejected'] as bool? ?? true,
   imageWithHandOcclusionRejected:
       json['imageWithHandOcclusionRejected'] as bool? ?? true,
+  inputImageSelectionStrategy:
+      $enumDecodeNullable(
+        _$InputImageSelectionStrategyEnumMap,
+        json['inputImageSelectionStrategy'],
+      ) ??
+      InputImageSelectionStrategy.balanced,
 );
 
 Map<String, dynamic> _$DocumentCaptureModuleSettingsToJson(
   DocumentCaptureModuleSettings instance,
 ) => <String, dynamic>{
-  'inputImageCropped': instance.inputImageCropped,
+  'cropType': _$InputImageCropTypeEnumMap[instance.cropType]!,
   'unsupportedDocumentsAllowed': instance.unsupportedDocumentsAllowed,
   'secondSideWithNoExtractableDataSkipped':
       instance.secondSideWithNoExtractableDataSkipped,
@@ -114,6 +122,15 @@ Map<String, dynamic> _$DocumentCaptureModuleSettingsToJson(
       _$SensitivityLevelEnumMap[instance.tiltSensitivityLevel]!,
   'imageWithPoorLightingRejected': instance.imageWithPoorLightingRejected,
   'imageWithHandOcclusionRejected': instance.imageWithHandOcclusionRejected,
+  'inputImageSelectionStrategy':
+      _$InputImageSelectionStrategyEnumMap[instance
+          .inputImageSelectionStrategy]!,
+};
+
+const _$InputImageCropTypeEnumMap = {
+  InputImageCropType.notCropped: 'not-cropped',
+  InputImageCropType.unknown: 'unknown',
+  InputImageCropType.cropped: 'cropped',
 };
 
 const _$SensitivityLevelEnumMap = {
@@ -121,6 +138,13 @@ const _$SensitivityLevelEnumMap = {
   SensitivityLevel.low: 'low',
   SensitivityLevel.mid: 'mid',
   SensitivityLevel.high: 'high',
+};
+
+const _$InputImageSelectionStrategyEnumMap = {
+  InputImageSelectionStrategy.singleImage: 'single-image',
+  InputImageSelectionStrategy.optimizeForSpeed: 'optimize-for-speed',
+  InputImageSelectionStrategy.balanced: 'balanced',
+  InputImageSelectionStrategy.optimizeForQuality: 'optimize-for-quality',
 };
 
 MrzModuleSettings _$MrzModuleSettingsFromJson(Map<String, dynamic> json) =>

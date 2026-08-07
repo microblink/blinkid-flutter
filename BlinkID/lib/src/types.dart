@@ -116,11 +116,10 @@ class BarcodeModuleSettings {
 /// and lighting checks).
 @JsonSerializable()
 class DocumentCaptureModuleSettings {
-  /// Indicates whether the input image is already cropped and perspective-corrected.
-  ///
-  /// Requires the input image to consist solely of the cropped document image with perspective correction applied.
-  /// This only applies to images from the DirectAPI method of scanning — with images from the default scanning, the setting will be ignored.
-  bool inputImageCropped;
+
+  /// Default: [InputImageCropType.notCropped].
+  /// [InputImageCropType.cropped] / [InputImageCropType.unknown] → DirectAPI only.
+  InputImageCropType cropType;
 
   /// Enables the scanning and processing of unsupported document types.
   ///
@@ -178,7 +177,7 @@ class DocumentCaptureModuleSettings {
   ///
   /// Default value is `0.02`.
   /// The setting is applicable only when using images from `Video` source.
-  /// The setting is ignored if `inputImageCropped == true`.
+  /// The setting is ignored if [cropType] is [InputImageCropType.cropped].
   ///
   /// Allowed minimal value is `0.0` and maximum value is `1.0`.
   double? inputImageMargin;
@@ -244,11 +243,17 @@ class DocumentCaptureModuleSettings {
   ///
   /// If `true`, occluded images will be excluded from further processing.
   ///
-  /// This setting is applicable only if `inputImageCropped == false`.
+  /// Not applicable when [cropType] is [InputImageCropType.cropped]
+  /// (setting it to `true` in that case fails settings validation).
+  /// For [InputImageCropType.notCropped] / [InputImageCropType.unknown],
+  /// the default is to reject hand-occluded images.
   bool imageWithHandOcclusionRejected;
 
+  /// Default: [InputImageSelectionStrategy.balanced]. Video / camera oriented.
+  InputImageSelectionStrategy inputImageSelectionStrategy;
+
   DocumentCaptureModuleSettings({
-    this.inputImageCropped = false,
+    this.cropType = InputImageCropType.notCropped,
     this.unsupportedDocumentsAllowed = false,
     this.secondSideWithNoExtractableDataSkipped = true,
     this.passportDataPageScanOnly = true,
@@ -266,6 +271,7 @@ class DocumentCaptureModuleSettings {
     this.tiltSensitivityLevel = SensitivityLevel.mid,
     this.imageWithPoorLightingRejected = true,
     this.imageWithHandOcclusionRejected = true,
+    this.inputImageSelectionStrategy = InputImageSelectionStrategy.balanced,
   });
 
   factory DocumentCaptureModuleSettings.fromJson(Map<String, dynamic> json) =>
@@ -637,6 +643,36 @@ enum SensitivityLevel {
   /// Sets the [SensitivityLevel] to be highly sensitive.
   @JsonValue("high")
   high,
+}
+
+/// How the input image is treated for document localization / crop.
+///
+/// - [notCropped]: raw image; runs detection + perspective correction.
+/// - [unknown]: try cropped processing first, fall back to detection.
+/// - [cropped]: image must already be cropped + perspective-corrected.
+///
+/// [cropped] and [unknown] are DirectAPI / Photo only; camera / Video requires [notCropped].
+enum InputImageCropType {
+  @JsonValue("not-cropped")
+  notCropped,
+  @JsonValue("unknown")
+  unknown,
+  @JsonValue("cropped")
+  cropped,
+}
+
+/// How the best frame is chosen from a pool of stable video frames.
+///
+/// Applicable to Video / camera scanning only.
+enum InputImageSelectionStrategy {
+  @JsonValue("single-image")
+  singleImage,
+  @JsonValue("optimize-for-speed")
+  optimizeForSpeed,
+  @JsonValue("balanced")
+  balanced,
+  @JsonValue("optimize-for-quality")
+  optimizeForQuality,
 }
 
 /// Represents level of anonymization performed on the scanning result.

@@ -25,6 +25,8 @@ import com.microblink.blinkid.ux.settings.ClassFilter
 import com.microblink.blinkid.core.network.RequestTimeout
 import com.microblink.blinkid.core.session.InputImageSource
 import com.microblink.blinkid.core.settings.RedactionMode
+import com.microblink.blinkid.core.image.InputImageCropType
+import com.microblink.blinkid.core.image.InputImageSelectionStrategy
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
@@ -125,7 +127,7 @@ object BlinkIdDeserializationUtils {
 
     private fun deserializeDocumentCaptureModuleSettings(map: Map<String, Any>): DocumentCaptureModuleSettings {
         return DocumentCaptureModuleSettings(
-            inputImageCropped = map["inputImageCropped"] as? Boolean ?: false,
+            cropType = parseInputImageCropType(map["cropType"] as? String),
             unsupportedDocumentsAllowed = map["unsupportedDocumentsAllowed"] as? Boolean ?: false,
             secondSideWithNoExtractableDataSkipped = map["secondSideWithNoExtractableDataSkipped"] as? Boolean ?: true,
             passportDataPageScanOnly = map["passportDataPageScanOnly"] as? Boolean ?: true,
@@ -143,7 +145,29 @@ object BlinkIdDeserializationUtils {
             tiltSensitivityLevel = deserializeSensitivityLevel(map["tiltSensitivityLevel"] as? String),
             imageWithPoorLightingRejected = map["imageWithPoorLightingRejected"] as? Boolean ?: true,
             imageWithHandOcclusionRejected = map["imageWithHandOcclusionRejected"] as? Boolean ?: true,
+            inputImageSelectionStrategy = parseInputImageSelectionStrategy(
+                map["inputImageSelectionStrategy"] as? String,
+            ),
         )
+    }
+
+    private fun parseInputImageCropType(value: String?): InputImageCropType {
+        return when (value?.lowercase()) {
+            "cropped" -> InputImageCropType.Cropped
+            "unknown" -> InputImageCropType.Unknown
+            "not-cropped" -> InputImageCropType.NotCropped
+            else -> InputImageCropType.NotCropped
+        }
+    }
+    
+    private fun parseInputImageSelectionStrategy(value: String?): InputImageSelectionStrategy {
+        return when (value?.lowercase()) {
+            "single-image" -> InputImageSelectionStrategy.SingleImage
+            "optimize-for-speed" -> InputImageSelectionStrategy.OptimizeForSpeed
+            "optimize-for-quality" -> InputImageSelectionStrategy.OptimizeForQuality
+            "balanced" -> InputImageSelectionStrategy.Balanced
+            else -> InputImageSelectionStrategy.Balanced
+        }
     }
 
     private fun deserializeSensitivityLevel(value: String?): SensitivityLevel {

@@ -267,8 +267,8 @@ struct BlinkIdDeserializationUtils {
             documentCaptureSettings.imageWithPoorLightingRejected = imageWithPoorLightingRejected
         }
         
-        if let inputImageCropped = documentCaptureModuleDict["inputImageCropped"] as? Bool {
-            documentCaptureSettings.inputImageCropped = inputImageCropped
+        if let cropType = documentCaptureModuleDict["cropType"] as? String {
+            documentCaptureSettings.cropType = deserializeInputImageCropType(cropType)
         }
         
         if let inputImageReturnEnabled = documentCaptureModuleDict["inputImageReturnEnabled"] as? Bool {
@@ -294,7 +294,31 @@ struct BlinkIdDeserializationUtils {
         if let tiltSensitivityLevel = documentCaptureModuleDict["tiltSensitivityLevel"] as? String {
             documentCaptureSettings.tiltSensitivityLevel = deserializeSensitivityLevel(tiltSensitivityLevel)
         }
+
+        if let inputImageSelectionStrategy = documentCaptureModuleDict["inputImageSelectionStrategy"] as? String {
+            documentCaptureSettings.inputImageSelectionStrategy =
+                deserializeInputImageSelectionStrategy(inputImageSelectionStrategy)
+        }
         return documentCaptureSettings
+    }
+
+    static func deserializeInputImageCropType(_ value: String) -> InputImageCropType {
+        switch value {
+        case "cropped": return .cropped
+        case "unknown": return .unknown
+        case "not-cropped": return .notCropped
+        default: return .notCropped
+        }
+    }
+    
+    static func deserializeInputImageSelectionStrategy(_ value: String) -> InputImageSelectionStrategy {
+        switch value {
+        case "single-image": return .singleImage
+        case "optimize-for-speed": return .optimizeForSpeed
+        case "optimize-for-quality": return .optimizeForQuality
+        case "balanced": return .balanced
+        default: return .balanced
+        }
     }
     
     static func deserializeSensitivityLevel(_ sensitivityLevelRawValue: String) -> SensitivityLevel {
