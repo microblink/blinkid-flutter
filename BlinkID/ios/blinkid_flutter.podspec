@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'blinkid_flutter'
-  s.version          = '8000.0.0'
+  s.version          = '8001.0.0'
   s.summary          = 'The BlinkID SDK for Flutter'
   s.description      = <<-DESC
   The BlinkID SDK is a comprehensive solution for implementing secure document scanning on the Flutter cross-platform. It offers powerful capabilities for capturing and analyzing a wide range of identification documents. The Flutter plugin consists of BlinkID, which serves as the core module, and the BlinkIDUX package that provides a complete, ready-to-use solution with a user-friendly interface.

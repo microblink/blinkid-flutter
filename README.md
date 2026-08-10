@@ -11,6 +11,10 @@ It offers powerful capabilities for capturing and analyzing a wide range of iden
 
 However, since the wrapper is open source, you can add the features you need on your own.
 
+> **Current version:** `blinkid_flutter` **8001.0.0** (BlinkID SDK v8001).  
+> If you are upgrading from v8000, see [What's new in v8001](#whats-new-in-v8001).  
+> If you are upgrading from v7.x, see [Migrating from v7.x](#migrating-from-v7x) (then apply the v8001 notes).
+
 # Table of contents
 - [Licensing](#licensing)
 - [Requirements](#requirements)
@@ -24,6 +28,7 @@ However, since the wrapper is open source, you can add the features you need on 
   - [BlinkID settings](#blinkid-settings)
   - [BlinkID results](#blinkid-results)
   - [Class filter & redaction](#class-filter--redaction)
+- [What's new in v8001](#whats-new-in-v8001)
 - [Migrating from v7.x](#migrating-from-v7x)
 - [Additional information](#additional-information)
 
@@ -114,7 +119,7 @@ Add `blinkid_flutter` to your `pubspec.yaml`:
 ```yaml
 dependencies:
   ...
-  blinkid_flutter: ^8000.0.0
+  blinkid_flutter: ^8001.0.0
 ```
 
 Then install:
@@ -185,7 +190,7 @@ if (Platform.isAndroid) {
 // SDK initialization settings
 final sdkSettings = BlinkIdSdkSettings(
   licenseKey: sdkLicenseKey,
-  downloadResources: true
+  resourcesConfig: ResourcesConfig(download: true),
 );
 
 // Scanning modules — enable only what your use case needs, for example
@@ -221,11 +226,11 @@ final uxSettings = BlinkIdScanningUxSettings(
 // Optional document class filter
 final classFilter = ClassFilter()
   ..includeDocuments = [
-    DocumentFilter(country: Country.usa),
+    DocumentFilter(country: CountryID.usa),
     DocumentFilter(
-      country: Country.usa,
-      region: Region.california,
-      documentType: DocumentType.id,
+      country: CountryID.usa,
+      region: RegionID.california,
+      documentType: DocumentTypeID.id,
     ),
   ];
 ```
@@ -319,7 +324,11 @@ Key document capture settings:
 - `faceImageExtractionEnabled` / `faceImagePresenceMandatory` — control face photo extraction.
 - `blurSensitivityLevel`, `glareSensitivityLevel`, `tiltSensitivityLevel` — use `SensitivityLevel` (`off`, `low`, `mid`, `high`).
 - `imageWithBlurRejected`, `imageWithGlareRejected`, etc. — reject or accept frames with quality issues.
-- `inputImageCropped` — for DirectAPI only; set to `true` when input images are already cropped.
+- `cropType` — `InputImageCropType.notCropped` (default; camera + DirectAPI), `unknown`, or `cropped`. `cropped` / `unknown` are **DirectAPI only**; camera `performScan` requires `notCropped`.
+- `inputImageSelectionStrategy` — camera / video frame selection (`balanced` default).
+
+Key barcode settings:
+- `aztecScanningEnabled` — enable Aztec barcodes (default `false`).
 
 Key VIZ settings:
 - `signatureImageExtractionEnabled` — extract signature images when supported.
@@ -337,7 +346,7 @@ Launches camera scanning with the BlinkID UX.
 
 | Parameter | Type | Required | Description |
 |:----------|:-----|:--------:|:------------|
-| `blinkIdSdkSettings` | `BlinkIdSdkSettings` | Yes | License key and resource download settings. |
+| `blinkIdSdkSettings` | `BlinkIdSdkSettings` | Yes | License key, nested `resourcesConfig` / optional `otaResourcesConfig`, proxy URL. |
 | `blinkIdSessionSettings` | `BlinkIdSessionSettings` | Yes | Scanning mode, module settings, and timeouts. |
 | `blinkidScanningUxSettings` | `BlinkIdScanningUxSettings` | No | Help button, onboarding, haptics, preferred camera. |
 | `classFilter` | `ClassFilter` | No | Accept or reject specific document classes. |
@@ -352,7 +361,7 @@ Extracts data from one or two Base64-encoded static images.
 
 | Parameter | Type | Required | Description |
 |:----------|:-----|:--------:|:------------|
-| `blinkIdSdkSettings` | `BlinkIdSdkSettings` | Yes | License key and resource download settings. |
+| `blinkIdSdkSettings` | `BlinkIdSdkSettings` | Yes | License key, nested `resourcesConfig` / optional `otaResourcesConfig`, proxy URL. |
 | `blinkIdSessionSettings` | `BlinkIdSessionSettings` | Yes | Scanning mode and module settings. |
 | `firstImage` | `String` | Yes | Base64 image of the first document side. |
 | `secondImage` | `String` | No | Base64 image of the second side (for `ScanningMode.automatic`). |
@@ -386,7 +395,7 @@ This method is automatically called after each successful scan session.
 
 | Setting class | Description |
 |:--------------|:------------|
-| [`BlinkIdSdkSettings`](BlinkID/lib/src/blinkid_settings.dart) | License key, resource download URL/folder, proxy URL, iOS bundle identifier. |
+| [`BlinkIdSdkSettings`](BlinkID/lib/src/blinkid_settings.dart) | License key, nested `resourcesConfig` / optional `otaResourcesConfig`, proxy URL. |
 | [`BlinkIdSessionSettings`](BlinkID/lib/src/blinkid_settings.dart) | `ScanningMode`, `BlinkIdScanningSettings`, step and inactivity timeouts. |
 | [`BlinkIdScanningSettings`](BlinkID/lib/src/blinkid_settings.dart) | Module settings and `maxAllowedMismatchesPerField`. |
 | [`DocumentCaptureModuleSettings`](BlinkID/lib/src/types.dart) | Document detection, image quality, face/document image return. |
@@ -411,7 +420,7 @@ The scanning result is a `BlinkIdScanningResult` containing merged document-leve
 - `firstDocumentImage` / `secondDocumentImage` — cropped document images (Base64).
 - `faceImage` / `signatureImage` — `DetailedCroppedImageResult` with image data and metadata.
 - `firstInputImage` / `secondInputImage` / `barcodeInputImage` — raw input frames when enabled.
-- `documentClassInfo` — detected country, region, document type.
+- `documentClassInfo` — nested `country` / `region` / `documentType` (`id?`, `rawValue`), plus country name / ISO codes.
 - `dataMatchResult` — cross-side data match status.
 
 **Per-side detail** — `subResults` is a `List<SingleSideScanningResult>`, one entry per scanned side. Each side contains:
@@ -438,11 +447,13 @@ Native serialization implementations:
 Restrict which documents are accepted during camera scanning:
 ```dart
 final filter = ClassFilter()
-  ..includeDocuments = [DocumentFilter(country: Country.canada)]
-  ..excludeDocuments = [DocumentFilter(country: Country.usa, documentType: DocumentType.passport)];
+  ..includeDocuments = [DocumentFilter(country: CountryID.canada)]
+  ..excludeDocuments = [
+    DocumentFilter(country: CountryID.usa, documentType: DocumentTypeID.passport),
+  ];
 ```
 
-If `includeDocuments` is empty, all documents are accepted unless excluded. Rules can specify any combination of `country`, `region`, and `documentType`.
+If `includeDocuments` is empty, all documents are accepted unless excluded. Rules can specify any combination of `country`, `region`, and `documentType` (`CountryID` / `RegionID` / `DocumentTypeID`).
 
 #### Redaction
 Redaction replaces or removes sensitive data from results and/or document images.
@@ -458,7 +469,7 @@ final resolver = RedactionSettingsResolver([
       suffixDigitsVisible: 4,
     ),
     documentFilter: [
-      DocumentFilter(country: Country.usa, region: Region.california),
+      DocumentFilter(country: CountryID.usa, region: RegionID.california),
     ],
   ),
 ]);
@@ -467,6 +478,72 @@ final resolver = RedactionSettingsResolver([
 For **DirectAPI scanning**, pass a single `RedactionSettings` object directly to `performDirectApiScan`.
 
 `RedactionMode` values: `none`, `imageOnly`, `resultFieldsOnly`, `fullResult`.
+
+## <a name="whats-new-in-v8001"></a> What's new in v8001
+
+BlinkID v8001 builds on the modular architecture from v8000 with faster document support (including OTA resources), better frame selection, DirectAPI crop handling, Aztec barcodes, and nested document class info.
+
+Highlights for Flutter:
+
+| Area | Change |
+| --- | --- |
+| **SDK settings** | Flat resource fields → nested `resourcesConfig`; new optional `otaResourcesConfig` |
+| **Document class info** | `country` / `region` / `documentType` are `{ id?, rawValue }` (filters still use flat `CountryID` / `RegionID` / `DocumentTypeID`) |
+| **Document capture** | `inputImageCropped` → `cropType`; added `inputImageSelectionStrategy` |
+| **Barcode** | `aztecScanningEnabled` |
+| **Results** | `ethnicity`; `ParentInfo.fullName`; `FieldType.ethnicity` / `parentFullName` |
+
+#### Migrating SDK settings from v8000
+
+```dart
+// v8000
+final sdkSettings = BlinkIdSdkSettings(
+  licenseKey: licenseKey,
+  downloadResources: true,
+);
+
+// v8001
+final sdkSettings = BlinkIdSdkSettings(
+  licenseKey: licenseKey,
+  resourcesConfig: ResourcesConfig(download: true),
+  otaResourcesConfig: OtaResourcesConfig(
+    checkForUpdates: true, // default
+    strict: false,         // default — set true to fail init on OTA download errors
+  ),
+);
+```
+
+| v8000 (flat) | v8001 |
+| --- | --- |
+| `downloadResources` | `resourcesConfig.download` |
+| `resourceDownloadUrl` | `resourcesConfig.serviceUrl` |
+| `resourceLocalFolder` | `resourcesConfig.localFolder` |
+| `resourceRequestTimeout` | `resourcesConfig.requestTimeout` |
+| `bundleIdentifier` | `resourcesConfig.bundleIdentifier` (iOS) |
+
+Do **not** cross-wire hosts: base resources use `https://models.cdn.microblink.com/resources`; OTA uses `https://blinkid-ota.microblink.com`.
+
+#### Migrating document capture settings
+
+```dart
+// v8000
+DocumentCaptureModuleSettings(inputImageCropped: true)
+
+// v8001 — DirectAPI only for cropped/unknown
+DocumentCaptureModuleSettings(cropType: InputImageCropType.cropped)
+// or InputImageCropType.unknown / InputImageCropType.notCropped
+```
+
+Camera UX (`performScan`) must use `InputImageCropType.notCropped`.
+
+#### Document class info in results
+
+```dart
+final countryId = result.documentClassInfo?.country?.id;        // CountryID when known
+final countryRaw = result.documentClassInfo?.country?.rawValue; // set when country is present
+```
+
+Full changelog (documents, bug fixes, API details): [Release notes.md](https://github.com/microblink/blinkid-flutter/blob/master/Release%20notes.md) and [platform release notes](https://docs.microblink.com/blinkid/release-notes).
 
 ## <a name="migrating-from-v7x"></a> Migrating from v7.x
 
@@ -513,6 +590,8 @@ await blinkIdPlugin.performScan(
 ```
 
 Review the [scanning modules](#scanning-modules) section and the sample app configuration files to map your v7 settings to the appropriate v8000 modules.
+
+After migrating from v7 to the modular API, also apply [What's new in v8001](#whats-new-in-v8001) (nested `resourcesConfig` / OTA, `cropType`, nested class info).
 
 ## <a name="additional-information"></a> Additional information
 For any additional questions and information, feel free to contact us [here](https://help.microblink.com), or directly to the Support team via mail support@microblink.com.
