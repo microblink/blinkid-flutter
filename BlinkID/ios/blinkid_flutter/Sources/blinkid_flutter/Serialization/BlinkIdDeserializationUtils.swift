@@ -11,6 +11,11 @@ import UIKit
 import BlinkIDUX
 
 struct BlinkIdDeserializationUtils {
+    private static let defaultResourceDownloadUrl = "https://models.cdn.microblink.com/resources"
+    private static let defaultResourceLocalFolder = "MLModels"
+    private static let defaultOtaDownloadUrl = "https://blinkid-ota.microblink.com"
+    private static let defaultOtaResourcesLocalFolder = "OTAMLModels"
+
     static func deserializeBlinkIdSdkSettings(_ sdkSettingsDict: Dictionary<String, Any>?) -> BlinkIDSdkSettings? {
         var blinkidSdkSettings: BlinkIDSdkSettings?
         
@@ -22,27 +27,49 @@ struct BlinkIdDeserializationUtils {
             blinkidSdkSettings?.licensee = licensee
         }
         
-        if let downloadResources = sdkSettingsDict?["downloadResources"] as? Bool {
-            blinkidSdkSettings?.downloadResources = downloadResources
-        }
-        
-        if let resourceDownloadUrl = sdkSettingsDict?["resourceDownloadUrl"] as? String {
-            blinkidSdkSettings?.resourceDownloadUrl = resourceDownloadUrl
-        }
-        
-        if let resourceLocalFolder = sdkSettingsDict?["resourceLocalFolder"] as? String {
-            blinkidSdkSettings?.resourceLocalFolder = resourceLocalFolder
-        }
-        
-        if let bundleURL = sdkSettingsDict?["bundleIdentifier"] as? String,
-           let bundle: Bundle = Bundle.init(identifier: bundleURL) {
-            blinkidSdkSettings?.bundleURL = bundle.bundleURL
+        let resourcesDict = sdkSettingsDict?["resourcesConfig"] as? Dictionary<String, Any>
+        let download = resourcesDict?["download"] as? Bool ?? true
+        let serviceUrl = resourcesDict?["serviceUrl"] as? String ?? defaultResourceDownloadUrl
+        let localFolder = resourcesDict?["localFolder"] as? String ?? defaultResourceLocalFolder
+
+        var bundleUrl: URL? = nil
+        if let bundleIdentifier = resourcesDict?["bundleIdentifier"] as? String,
+        let bundle = Bundle(identifier: bundleIdentifier) {
+            bundleUrl = bundle.bundleURL
         }
 
-        if let resourceRequestTimeout = sdkSettingsDict?["resourceRequestTimeout"] as? Int {
-            // TODO Bug in iOS native SDK
-            blinkidSdkSettings?.resourceRequestTimeout = BlinkID.RequestTimeout.default
+        // TODO Bug in iOS native SDK
+        // TODO: map resourcesConfig.requestTimeout — currently always .default
+        blinkidSdkSettings?.resourcesConfiguration = ResourcesConfig(
+            download: download,
+            serviceUrl: serviceUrl,
+            localFolder: localFolder,
+            requestTimeout: .default,
+            bundleUrl: bundleUrl
+        )
+
+        let otaResourcesDict = sdkSettingsDict?["otaResourcesConfig"] as? Dictionary<String, Any>
+        let otaCheckForUpdates = otaResourcesDict?["checkForUpdates"] as? Bool ?? true
+        let otaStrict = otaResourcesDict?["strict"] as? Bool ?? false
+        let otaServiceUrl = otaResourcesDict?["serviceUrl"] as? String ?? defaultOtaDownloadUrl
+        let otaLocalFolder = otaResourcesDict?["localFolder"] as? String ?? defaultOtaResourcesLocalFolder
+        
+        var otaBundleUrl: URL? = nil
+        if let otaBundleIdentifier = otaResourcesDict?["bundleIdentifier"] as? String,
+        let otaBundle = Bundle(identifier: otaBundleIdentifier) {
+            otaBundleUrl = otaBundle.bundleURL
         }
+        
+        // TODO Bug in iOS native SDK
+        // TODO: map otaResourcesConfig.requestTimeout — currently always .default
+        blinkidSdkSettings?.otaResourcesConfiguration = OTAResourcesConfig(
+            checkForUpdates: otaCheckForUpdates,
+            strict: otaStrict,
+            serviceUrl: otaServiceUrl,
+            localFolder: otaLocalFolder,
+            requestTimeout: .default,
+            bundleUrl: otaBundleUrl
+        )
         
         if let microblinkProxyUrl = sdkSettingsDict?["microblinkProxyUrl"] as? String {
             blinkidSdkSettings?.microblinkProxyURL = microblinkProxyUrl

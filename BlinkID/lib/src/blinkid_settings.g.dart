@@ -6,15 +6,58 @@ part of 'blinkid_settings.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+ResourcesConfig _$ResourcesConfigFromJson(Map<String, dynamic> json) =>
+    ResourcesConfig(
+      download: json['download'] as bool?,
+      serviceUrl: json['serviceUrl'] as String?,
+      localFolder: json['localFolder'] as String?,
+      requestTimeout: (json['requestTimeout'] as num?)?.toInt(),
+      bundleIdentifier: json['bundleIdentifier'] as String?,
+    );
+
+Map<String, dynamic> _$ResourcesConfigToJson(ResourcesConfig instance) =>
+    <String, dynamic>{
+      'download': instance.download,
+      'serviceUrl': instance.serviceUrl,
+      'localFolder': instance.localFolder,
+      'requestTimeout': instance.requestTimeout,
+      'bundleIdentifier': instance.bundleIdentifier,
+    };
+
+OtaResourcesConfig _$OtaResourcesConfigFromJson(Map<String, dynamic> json) =>
+    OtaResourcesConfig(
+      checkForUpdates: json['checkForUpdates'] as bool?,
+      strict: json['strict'] as bool?,
+      serviceUrl: json['serviceUrl'] as String?,
+      localFolder: json['localFolder'] as String?,
+      requestTimeout: (json['requestTimeout'] as num?)?.toInt(),
+      bundleIdentifier: json['bundleIdentifier'] as String?,
+    );
+
+Map<String, dynamic> _$OtaResourcesConfigToJson(OtaResourcesConfig instance) =>
+    <String, dynamic>{
+      'checkForUpdates': instance.checkForUpdates,
+      'strict': instance.strict,
+      'serviceUrl': instance.serviceUrl,
+      'localFolder': instance.localFolder,
+      'requestTimeout': instance.requestTimeout,
+      'bundleIdentifier': instance.bundleIdentifier,
+    };
+
 BlinkIdSdkSettings _$BlinkIdSdkSettingsFromJson(Map<String, dynamic> json) =>
     BlinkIdSdkSettings(
       licenseKey: json['licenseKey'] as String,
-      downloadResources: json['downloadResources'] as bool? ?? true,
       licensee: json['licensee'] as String?,
-      resourceDownloadUrl: json['resourceDownloadUrl'] as String?,
-      resourceLocalFolder: json['resourceLocalFolder'] as String?,
-      bundleIdentifier: json['bundleIdentifier'] as String?,
-      resourceRequestTimeout: (json['resourceRequestTimeout'] as num?)?.toInt(),
+      resourcesConfig: json['resourcesConfig'] == null
+          ? null
+          : ResourcesConfig.fromJson(
+              json['resourcesConfig'] as Map<String, dynamic>,
+            ),
+      otaResourcesConfig: json['otaResourcesConfig'] == null
+          ? null
+          : OtaResourcesConfig.fromJson(
+              json['otaResourcesConfig'] as Map<String, dynamic>,
+            ),
       microblinkProxyUrl: json['microblinkProxyUrl'] as String?,
     );
 
@@ -22,11 +65,8 @@ Map<String, dynamic> _$BlinkIdSdkSettingsToJson(BlinkIdSdkSettings instance) =>
     <String, dynamic>{
       'licenseKey': instance.licenseKey,
       'licensee': instance.licensee,
-      'downloadResources': instance.downloadResources,
-      'resourceDownloadUrl': instance.resourceDownloadUrl,
-      'resourceLocalFolder': instance.resourceLocalFolder,
-      'bundleIdentifier': instance.bundleIdentifier,
-      'resourceRequestTimeout': instance.resourceRequestTimeout,
+      'resourcesConfig': instance.resourcesConfig,
+      'otaResourcesConfig': instance.otaResourcesConfig,
       'microblinkProxyUrl': instance.microblinkProxyUrl,
     };
 

@@ -3,6 +3,8 @@ package com.microblink.blinkid.flutter
 import android.graphics.BitmapFactory
 import android.os.Parcelable
 import com.microblink.blinkid.core.BlinkIdSdkSettings
+import com.microblink.blinkid.core.settings.ResourcesConfig
+import com.microblink.blinkid.core.settings.OtaResourcesConfig
 import com.microblink.blinkid.core.result.FieldType
 import com.microblink.blinkid.core.result.classinfo.CountryId
 import com.microblink.blinkid.core.result.classinfo.DocumentClassInfo
@@ -40,24 +42,46 @@ object BlinkIdDeserializationUtils {
 
     internal const val TAG = "BlinkIdFlutter"
     private const val DEFAULT_RESOURCE_DOWNLOAD_URL = "https://models.cdn.microblink.com/resources"
-    private const val DEFAULT_RESOURCES_LOCAL_FOLDER = "MLModels"
+    private const val DEFAULT_RESOURCES_LOCAL_FOLDER = "microblink/blinkid"
+
+    private const val DEFAULT_OTA_DOWNLOAD_URL = "https://blinkid-ota.microblink.com"
+    private const val DEFAULT_OTA_RESOURCES_LOCAL_FOLDER = "microblink/blinkid/ota"
 
     fun deserializeBlinkIdSdkSettings(blinkIdSdkSettingsMap: Map<String, Any>?): BlinkIdSdkSettings? {
         val licenseKey = blinkIdSdkSettingsMap?.get("licenseKey") as? String ?: return null
+        val resourcesMap = blinkIdSdkSettingsMap["resourcesConfig"] as? Map<String, Any>
+        val otaResourcesMap = blinkIdSdkSettingsMap["otaResourcesConfig"] as? Map<String, Any>
 
-        val sdkSettings = BlinkIdSdkSettings(
+        return BlinkIdSdkSettings(
             licenseKey = licenseKey,
             licensee = blinkIdSdkSettingsMap["licensee"] as? String,
-            downloadResources = blinkIdSdkSettingsMap["downloadResources"] as? Boolean ?: true,
-            resourceDownloadUrl = blinkIdSdkSettingsMap["resourceDownloadUrl"] as? String
-                ?: DEFAULT_RESOURCE_DOWNLOAD_URL,
-            resourceLocalFolder = blinkIdSdkSettingsMap["resourceLocalFolder"] as? String
-                ?: DEFAULT_RESOURCES_LOCAL_FOLDER,
-            resourceRequestTimeout = deserializeResourceRequestTimeout(blinkIdSdkSettingsMap["resourceRequestTimeout"] as? Map<String, Any>),
+            resourcesConfig = ResourcesConfig(
+                download = resourcesMap?.get("download") as? Boolean ?: true,
+                serviceUrl = (resourcesMap?.get("serviceUrl") as? String)
+                    ?.takeIf { it.isNotBlank() }
+                    ?: DEFAULT_RESOURCE_DOWNLOAD_URL,
+                localFolder = (resourcesMap?.get("localFolder") as? String)
+                    ?.takeIf { it.isNotBlank() }
+                    ?: DEFAULT_RESOURCES_LOCAL_FOLDER,
+                requestTimeout = deserializeResourceRequestTimeout(
+                    resourcesMap?.get("requestTimeout") as? Map<String, Any>
+                ),
+            ),
+            otaResourcesConfig = OtaResourcesConfig(
+                checkForUpdates = otaResourcesMap?.get("checkForUpdates") as? Boolean ?: true,
+                strict = otaResourcesMap?.get("strict") as? Boolean ?: false,
+                serviceUrl = (otaResourcesMap?.get("serviceUrl") as? String)
+                    ?.takeIf { it.isNotBlank() }
+                    ?: DEFAULT_OTA_DOWNLOAD_URL,
+                localFolder = (otaResourcesMap?.get("localFolder") as? String)
+                    ?.takeIf { it.isNotBlank() }
+                    ?: DEFAULT_OTA_RESOURCES_LOCAL_FOLDER,
+                requestTimeout = deserializeResourceRequestTimeout(
+                    otaResourcesMap?.get("requestTimeout") as? Map<String, Any>
+                ),
+            ),
             microblinkProxyUrl = blinkIdSdkSettingsMap["microblinkProxyUrl"] as? String,
-            )
-
-        return sdkSettings
+        )
     }
 
     fun deserializeBlinkIdSessionSettings(

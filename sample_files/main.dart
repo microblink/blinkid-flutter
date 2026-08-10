@@ -48,10 +48,10 @@ class _MyAppState extends State<MyApp> {
 
   BlinkIdSdkSettings _buildSdkSettings() {
     final sdkSettings = BlinkIdSdkSettings(
-            licenseKey: sdkLicenseKey,
-            microblinkProxyUrl: _microblinkProxyUrl,
-            downloadResources: true
-          );
+      licenseKey: sdkLicenseKey,
+      microblinkProxyUrl: _microblinkProxyUrl,
+      resourcesConfig: ResourcesConfig(download: true),
+    );
     return sdkSettings;
   }
 
