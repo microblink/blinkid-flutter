@@ -3,6 +3,40 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'blinkid_settings.g.dart';
 
+/// Network timeouts used when the SDK downloads on-device processing resources.
+///
+/// Values are in milliseconds. Omit [ResourcesConfig.requestTimeout] or
+/// [OtaResourcesConfig.requestTimeout] to keep the native SDK default (30 seconds
+/// per timeout on current BlinkID native SDKs).
+@JsonSerializable(includeIfNull: false)
+class RequestTimeout {
+  /// Timeout for establishing the TCP connection to the resource host.
+  final int? connectionTimeoutMilliseconds;
+
+  /// Timeout for individual write IO operations.
+  final int? writeTimeoutMilliseconds;
+
+  /// Timeout applied to the TCP socket and read IO operations.
+  final int? readTimeoutMilliseconds;
+
+  const RequestTimeout({
+    this.connectionTimeoutMilliseconds,
+    this.writeTimeoutMilliseconds,
+    this.readTimeoutMilliseconds,
+  });
+
+  /// Applies the same duration to connection, write, and read timeouts.
+  factory RequestTimeout.all(int timeoutMilliseconds) => RequestTimeout(
+        connectionTimeoutMilliseconds: timeoutMilliseconds,
+        writeTimeoutMilliseconds: timeoutMilliseconds,
+        readTimeoutMilliseconds: timeoutMilliseconds,
+      );
+
+  factory RequestTimeout.fromJson(Map<String, dynamic> json) =>
+      _$RequestTimeoutFromJson(json);
+  Map<String, dynamic> toJson() => _$RequestTimeoutToJson(this);
+}
+
 @JsonSerializable()
 class ResourcesConfig {
   /// Default: `true`.
@@ -15,8 +49,9 @@ class ResourcesConfig {
   /// Android default: `microblink/blinkid`. iOS default: `MLModels`.
   String? localFolder;
 
-  /// Timeout in milliseconds (single value → connection/write/read).
-  int? requestTimeout;  // TODO bug, should be set to RequestTimeout not int
+  /// Network timeouts for resource downloads. Values are in milliseconds.
+  @JsonKey(includeIfNull: false)
+  RequestTimeout? requestTimeout;
 
   /// [iOS] Bundle id for prebundled resources when [download] is false.
   String? bundleIdentifier;
@@ -46,8 +81,10 @@ class OtaResourcesConfig {
   /// Android default: `microblink/blinkid/ota`. iOS default: `OTAMLModels`.
   String? localFolder;
 
-  int? requestTimeout;  // TODO bug, should be set to RequestTimeout not int
-  
+  /// Network timeouts for OTA resource downloads. Values are in milliseconds.
+  @JsonKey(includeIfNull: false)
+  RequestTimeout? requestTimeout;
+
   /// [iOS] Bundle id for prebundled OTA resources.
   String? bundleIdentifier;
   OtaResourcesConfig({

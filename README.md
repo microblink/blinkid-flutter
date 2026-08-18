@@ -518,10 +518,28 @@ final sdkSettings = BlinkIdSdkSettings(
 | `downloadResources` | `resourcesConfig.download` |
 | `resourceDownloadUrl` | `resourcesConfig.serviceUrl` |
 | `resourceLocalFolder` | `resourcesConfig.localFolder` |
-| `resourceRequestTimeout` | `resourcesConfig.requestTimeout` |
+| `resourceRequestTimeout` | `resourcesConfig.requestTimeout` ([`RequestTimeout`](BlinkID/lib/src/blinkid_settings.dart), milliseconds) |
 | `bundleIdentifier` | `resourcesConfig.bundleIdentifier` (iOS) |
 
 Do **not** cross-wire hosts: base resources use `https://models.cdn.microblink.com/resources`; OTA uses `https://blinkid-ota.microblink.com`.
+
+#### Resource download timeouts
+
+`resourcesConfig.requestTimeout` and `otaResourcesConfig.requestTimeout` accept a [`RequestTimeout`](BlinkID/lib/src/blinkid_settings.dart) object (milliseconds). Omit `requestTimeout` to use native defaults (30 seconds per timeout on current BlinkID native SDKs).
+
+```dart
+resourcesConfig: ResourcesConfig(
+  download: true,
+  requestTimeout: RequestTimeout.all(30000), // same value for connection, write, read
+),
+
+otaResourcesConfig: OtaResourcesConfig(
+  requestTimeout: RequestTimeout(
+    connectionTimeoutMilliseconds: 30000,
+    readTimeoutMilliseconds: 60000,
+  ), // write timeout uses native default when omitted
+),
+```
 
 #### Migrating document capture settings
 

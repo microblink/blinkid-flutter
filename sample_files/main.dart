@@ -50,7 +50,11 @@ class _MyAppState extends State<MyApp> {
     final sdkSettings = BlinkIdSdkSettings(
       licenseKey: sdkLicenseKey,
       microblinkProxyUrl: _microblinkProxyUrl,
-      resourcesConfig: ResourcesConfig(download: true),
+      resourcesConfig: ResourcesConfig(
+        download: true,
+        // Optional: override resource download timeouts (milliseconds).
+        // requestTimeout: RequestTimeout.all(30000),
+      ),
     );
     return sdkSettings;
   }

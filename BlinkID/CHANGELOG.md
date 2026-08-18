@@ -1,3 +1,114 @@
+## v8001.0.0
+
+Updated to BlinkID native SDKs **v8001.0.0** (Android & iOS). See also the [platform release notes](https://docs.microblink.com/blinkid/release-notes) and the repository [Release notes](https://github.com/microblink/blinkid-flutter/blob/master/Release%20notes.md).
+
+### What's new
+- Accelerated support for newly issued documents
+    - Optimized document support and extraction pipeline to reduce time-to-production for newly issued identity documents, and to apply document-rule / knowledge improvements without a full SDK upgrade when possible.
+    - Zero-day readiness: depending on design availability and when a new document begins circulating, BlinkID can deliver 0-day support—and at a maximum, within 4 weeks of the document's release.
+    - Future-proof compliance: workflows can adapt to global document updates faster than before.
+- Enhanced frame selection & image quality
+    - Smart quality selection: analyzes multiple frames and selects a crisp, stable image before extraction.
+    - Higher first-pass success by filtering blurry or unstable frames early.
+    - Flexible speed vs. quality tuning via `documentCaptureModule.inputImageSelectionStrategy` (camera / video flow).
+- Enhanced DirectAPI / photo-mode intelligence
+    - `documentCaptureModule.cropType` replaces the former boolean cropped-image flag (`InputImageCropType.notCropped` | `unknown` | `cropped`).
+    - `cropped` and `unknown` apply to **DirectAPI (photo)** flows only; camera UX (`performScan`) requires `notCropped`.
+- Expanded & improved barcode capabilities
+    - Aztec barcode support via `barcodeModule.aztecScanningEnabled`.
+    - Improved speed and accuracy for QR, DataMatrix, and selected 1D formats.
+- Parsing & extraction improvements
+    - Improved Persian digit recognition for regional documents.
+- Mandatory data redaction: Netherlands DL QR code added to the redacted list.
+- OTA (over-the-air) resources: configure separately from base ML resources via `BlinkIdSdkSettings.otaResourcesConfig`.
+
+### Bug fixes
+- Document swap data caching: fixed an issue in continuous-video mode where data from a previously scanned document could persist after a new document was introduced. The SDK now detects document swaps and clears cached images (cropped faces, signatures, barcodes, etc.) to prevent cross-contamination.
+- Fixed `resourcesConfig.requestTimeout` and `otaResourcesConfig.requestTimeout`: custom timeout values are now applied on Android and iOS (previously ignored or dropped on the bridge).
+
+### New documents support
+- Bailiwick Of Jersey - Driver's License
+- Bailiwick Of Jersey - Paper Passport
+- Bailiwick Of Jersey - Polycarbonate Passport
+- Botswana - Driver's License
+- Brunei - Polycarbonate Passport
+- Democratic Republic Of The Congo - Polycarbonate Passport
+- Dominican Republic - Polycarbonate Passport
+- Eswatini - Driver's License
+- Gambia - Driver's License
+- Georgia - Residence Permit
+- Iceland - Identity Card
+- Iceland - Residence Permit
+- Japan - Specified Residence Card
+- Liechtenstein - Residence Permit
+- Liechtenstein - Resident ID
+- Mali - Polycarbonate Passport
+- Mauritania - Resident ID
+- Monaco - Identity Card
+- Monaco - Residence Permit
+- Nepal - Identity Card
+- Palestine - Identity Card
+- San Marino - Identity Card
+- Sudan - Driver's License
+- UK, Northern Ireland - Voter ID
+- USA, Arkansas - Medical Marijuana ID
+- USA, Massachusetts - Medical Marijuana ID
+- USA, Michigan - Medical Marijuana ID
+- USA, New Jersey - Medical Marijuana ID
+- Zambia - Residence Permit
+
+#### New document versions for supported documents
+- Bolivia - Driver's License
+- Burkina Faso - Identity Card
+- Central African Republic - Paper Passport
+- Estonia - Identity Card
+- Dominican Republic - Identity Card
+- Guyana - Identity Card
+- Israel - Identity Card
+- Luxembourg - Polycarbonate Passport
+- Mexico, Baja California - Driver's License
+- Mexico, Hidalgo - Driver's License
+- Oman - Identity Card
+- Oman - Resident ID
+- Uruguay - Identity Card
+- USA, Mississippi - Identity Card
+- USA, Nebraska - Driver's License
+- USA, Nebraska - Identity Card
+- USA, North Carolina - Identity Card
+- USA, Oklahoma - Driver's License
+- USA, Oklahoma - Identity Card
+- USA, Texas - Weapon Permit
+
+#### New extracted fields from documents
+- Brazil national identity card and regional (22 regions) identity cards now extract parent names (`parentsInfo`).
+- Croatia identity card: added support for cyrillic values in `sex`, `address`, `issuingAuthority`, `lastName` and `firstName`, and latin `sex`.
+- Virgin Islands of the United States identity card and driver's license: added `documentSubtype` and `specificDocumentValidity`.
+- Tunisia identity card: added arab values for `lastName`, `firstName`, `placeOfBirth`; added `dateOfBirth`.
+- Argentina identity card and alien identity card: use `cardAccessNumber` instead of `documentAdditionalNumber`.
+
+### Requirements
+- Flutter **3.44.1** or newer
+- Dart **3.12.1** or newer
+- iOS **16.0** or newer; Swift Package Manager must be enabled (`flutter config --enable-swift-package-manager`)
+- Android API level **24** or newer; **compileSdk 36**; **AGP 9.1.0**; **Kotlin 2.2.21**
+- Integrator apps do **not** need Jetpack Compose setup; Compose is used internally by BlinkID UX
+
+### Breaking changes
+- **Document class info:** `DocumentClassInfo.country`, `region`, and `documentType` are nested objects (`Country` / `Region` / `DocumentType` with `id?` and `rawValue`) instead of flat enum/string values. `ClassFilter` / `DocumentFilter` stay flat (`CountryID` / `RegionID` / `DocumentTypeID`).
+- **SDK settings:** flat resource fields on `BlinkIdSdkSettings` move into `resourcesConfig` and optional `otaResourcesConfig` (`downloadResources` → `resourcesConfig.download`, `resourceDownloadUrl` → `resourcesConfig.serviceUrl`, etc.).
+- **Resource download timeouts:** `resourcesConfig.requestTimeout` and `otaResourcesConfig.requestTimeout` are `RequestTimeout?` (three millisecond fields: `connectionTimeoutMilliseconds`, `writeTimeoutMilliseconds`, `readTimeoutMilliseconds`), not `int?`. Use `RequestTimeout.all(milliseconds)` or per-field configuration. Omit `requestTimeout` to keep native defaults (30 seconds per timeout).
+- **Document capture:** `documentCaptureModule.inputImageCropped` (boolean) → `documentCaptureModule.cropType` (`InputImageCropType.notCropped` | `unknown` | `cropped`).
+- **Document capture:** added `documentCaptureModule.inputImageSelectionStrategy` (`singleImage` | `optimizeForSpeed` | `balanced` | `optimizeForQuality`).
+- **Barcode:** added `barcodeModule.aztecScanningEnabled` (default `false`).
+
+For step-by-step migration examples, see [What's new in v8001](https://github.com/microblink/blinkid-flutter/tree/master?tab=readme-ov-file#whats-new-in-v8001) in the README and [API changes in Release notes](https://github.com/microblink/blinkid-flutter/blob/master/Release%20notes.md#api-changes-v8001).
+
+### Minor API changes
+- Added `ethnicity` on `BlinkIdScanningResult` and `VizResult`.
+- Added `fullName` on `ParentInfo`.
+- Added `FieldType.parentFullName` and `FieldType.ethnicity` for redaction.
+- Native intermediate analysis APIs added in v8001 (e.g. process/analysis crop signals, `AwaitingMoreStableInputImages`, `vizExtractionType`) are **not** part of the Flutter public API.
+
 ## v8000.0.0
 
 ### What's new

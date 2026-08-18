@@ -6,12 +6,32 @@ part of 'blinkid_settings.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+RequestTimeout _$RequestTimeoutFromJson(
+  Map<String, dynamic> json,
+) => RequestTimeout(
+  connectionTimeoutMilliseconds: (json['connectionTimeoutMilliseconds'] as num?)
+      ?.toInt(),
+  writeTimeoutMilliseconds: (json['writeTimeoutMilliseconds'] as num?)?.toInt(),
+  readTimeoutMilliseconds: (json['readTimeoutMilliseconds'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$RequestTimeoutToJson(RequestTimeout instance) =>
+    <String, dynamic>{
+      'connectionTimeoutMilliseconds': ?instance.connectionTimeoutMilliseconds,
+      'writeTimeoutMilliseconds': ?instance.writeTimeoutMilliseconds,
+      'readTimeoutMilliseconds': ?instance.readTimeoutMilliseconds,
+    };
+
 ResourcesConfig _$ResourcesConfigFromJson(Map<String, dynamic> json) =>
     ResourcesConfig(
       download: json['download'] as bool?,
       serviceUrl: json['serviceUrl'] as String?,
       localFolder: json['localFolder'] as String?,
-      requestTimeout: (json['requestTimeout'] as num?)?.toInt(),
+      requestTimeout: json['requestTimeout'] == null
+          ? null
+          : RequestTimeout.fromJson(
+              json['requestTimeout'] as Map<String, dynamic>,
+            ),
       bundleIdentifier: json['bundleIdentifier'] as String?,
     );
 
@@ -20,7 +40,7 @@ Map<String, dynamic> _$ResourcesConfigToJson(ResourcesConfig instance) =>
       'download': instance.download,
       'serviceUrl': instance.serviceUrl,
       'localFolder': instance.localFolder,
-      'requestTimeout': instance.requestTimeout,
+      'requestTimeout': ?instance.requestTimeout,
       'bundleIdentifier': instance.bundleIdentifier,
     };
 
@@ -30,7 +50,11 @@ OtaResourcesConfig _$OtaResourcesConfigFromJson(Map<String, dynamic> json) =>
       strict: json['strict'] as bool?,
       serviceUrl: json['serviceUrl'] as String?,
       localFolder: json['localFolder'] as String?,
-      requestTimeout: (json['requestTimeout'] as num?)?.toInt(),
+      requestTimeout: json['requestTimeout'] == null
+          ? null
+          : RequestTimeout.fromJson(
+              json['requestTimeout'] as Map<String, dynamic>,
+            ),
       bundleIdentifier: json['bundleIdentifier'] as String?,
     );
 
@@ -40,7 +64,7 @@ Map<String, dynamic> _$OtaResourcesConfigToJson(OtaResourcesConfig instance) =>
       'strict': instance.strict,
       'serviceUrl': instance.serviceUrl,
       'localFolder': instance.localFolder,
-      'requestTimeout': instance.requestTimeout,
+      'requestTimeout': ?instance.requestTimeout,
       'bundleIdentifier': instance.bundleIdentifier,
     };
 

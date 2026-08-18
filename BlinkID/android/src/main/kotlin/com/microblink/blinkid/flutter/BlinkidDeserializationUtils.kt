@@ -29,6 +29,7 @@ import com.microblink.blinkid.core.session.InputImageSource
 import com.microblink.blinkid.core.settings.RedactionMode
 import com.microblink.blinkid.core.image.InputImageCropType
 import com.microblink.blinkid.core.image.InputImageSelectionStrategy
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
@@ -64,7 +65,7 @@ object BlinkIdDeserializationUtils {
                     ?.takeIf { it.isNotBlank() }
                     ?: DEFAULT_RESOURCES_LOCAL_FOLDER,
                 requestTimeout = deserializeResourceRequestTimeout(
-                    resourcesMap?.get("requestTimeout") as? Map<String, Any>
+                    resourcesMap?.get("requestTimeout")
                 ),
             ),
             otaResourcesConfig = OtaResourcesConfig(
@@ -77,7 +78,7 @@ object BlinkIdDeserializationUtils {
                     ?.takeIf { it.isNotBlank() }
                     ?: DEFAULT_OTA_RESOURCES_LOCAL_FOLDER,
                 requestTimeout = deserializeResourceRequestTimeout(
-                    otaResourcesMap?.get("requestTimeout") as? Map<String, Any>
+                    otaResourcesMap?.get("requestTimeout")
                 ),
             ),
             microblinkProxyUrl = blinkIdSdkSettingsMap["microblinkProxyUrl"] as? String,
@@ -237,13 +238,32 @@ object BlinkIdDeserializationUtils {
         )
     }
 
-    private fun deserializeResourceRequestTimeout(resourceRequestTimeoutMap: Map<String, Any>?): RequestTimeout {
-        if (resourceRequestTimeoutMap == null) return RequestTimeout.DEFAULT
+    private fun deserializeResourceRequestTimeout(timeoutValue: Any?): RequestTimeout {
+        val resourceRequestTimeoutMap = timeoutValue as? Map<String, Any> ?: return RequestTimeout.DEFAULT
+        val defaultTimeout = RequestTimeout.DEFAULT
         return RequestTimeout(
-            connectionTimeout = (resourceRequestTimeoutMap["connectionTimeoutMilliseconds"] as? Int ?: 10000).milliseconds,
-            writeTimeout = (resourceRequestTimeoutMap["writeTimeoutMilliseconds"] as? Int ?: 10000).milliseconds,
-            readTimeout = (resourceRequestTimeoutMap["readTimeoutMilliseconds"] as? Int ?: 10000).milliseconds
+            connectionTimeout = deserializeTimeoutMilliseconds(
+                resourceRequestTimeoutMap["connectionTimeoutMilliseconds"],
+                defaultTimeout.connectionTimeout,
+            ),
+            writeTimeout = deserializeTimeoutMilliseconds(
+                resourceRequestTimeoutMap["writeTimeoutMilliseconds"],
+                defaultTimeout.writeTimeout,
+            ),
+            readTimeout = deserializeTimeoutMilliseconds(
+                resourceRequestTimeoutMap["readTimeoutMilliseconds"],
+                defaultTimeout.readTimeout,
+            ),
         )
+    }
+
+    private fun deserializeTimeoutMilliseconds(value: Any?, default: Duration): Duration {
+        return when (value) {
+            is Int -> value.milliseconds
+            is Long -> value.toInt().milliseconds
+            is Double -> value.toInt().milliseconds
+            else -> default
+        }
     }
 
     private fun deserializeDocumentFilter(documentFilterMap: Map<String, Any>?): DocumentFilter {
