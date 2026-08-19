@@ -779,6 +779,80 @@ class _SampleIntSettingFieldState extends State<SampleIntSettingField> {
   }
 }
 
+class SampleStringSettingField extends StatefulWidget {
+  final String label;
+  final String value;
+  final String? placeholder;
+  final ValueChanged<String> onChanged;
+
+  const SampleStringSettingField({
+    required this.label,
+    required this.value,
+    this.placeholder,
+    required this.onChanged,
+  });
+
+  @override
+  State<SampleStringSettingField> createState() =>
+      _SampleStringSettingFieldState();
+}
+
+class _SampleStringSettingFieldState extends State<SampleStringSettingField> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(SampleStringSettingField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value && _controller.text != widget.value) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _commit() {
+    widget.onChanged(_controller.text.trim());
+  }
+
+  void _commitAndDismiss() {
+    _commit();
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: TextFormField(
+        controller: _controller,
+        decoration: InputDecoration(
+          labelText: widget.label,
+          hintText: widget.placeholder,
+          isDense: true,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.url,
+        autocorrect: false,
+        enableSuggestions: false,
+        textInputAction: TextInputAction.done,
+        onTapOutside: (_) => _commitAndDismiss(),
+        onFieldSubmitted: (_) => _commitAndDismiss(),
+        onEditingComplete: _commitAndDismiss,
+      ),
+    );
+  }
+}
+
 class _DoubleSettingField extends StatefulWidget {
   final String label;
   final double value;

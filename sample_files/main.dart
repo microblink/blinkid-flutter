@@ -55,6 +55,7 @@ class _MyAppState extends State<MyApp> {
         // Optional: override resource download timeouts (milliseconds).
         // requestTimeout: RequestTimeout.all(30000),
       ),
+      otaResourcesConfig: _modulesConfig.toOtaResourcesConfig(),
     );
     return sdkSettings;
   }
@@ -65,6 +66,7 @@ class _MyAppState extends State<MyApp> {
   void _logScanConfiguration(String action) {
     final sessionSettings = _buildSessionSettings();
     final scanningSettings = sessionSettings.scanningSettings;
+    final otaResourcesConfig = _modulesConfig.toOtaResourcesConfig();
     debugPrint('[BlinkIdSample] $action');
     debugPrint('[BlinkIdSample] scanningMode: ${sessionSettings.scanningMode}');
     debugPrint(
@@ -86,6 +88,10 @@ class _MyAppState extends State<MyApp> {
     );
     debugPrint(
       '[BlinkIdSample] full sessionSettings JSON: ${jsonEncode(sessionSettings.toJson())}',
+    );
+    debugPrint(
+      '[BlinkIdSample] otaResourcesConfig: '
+      '${otaResourcesConfig != null ? jsonEncode(otaResourcesConfig.toJson()) : 'null'}',
     );
   }
 
