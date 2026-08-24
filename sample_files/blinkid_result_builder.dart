@@ -41,6 +41,7 @@ class BlinkIdResultBuilder {
           result.nationalInsuranceNumber,
           "National insurance number",
         ) +
+        buildParentsInfoResult(result.parentsInfo) +
         buildDriverLicenceResult(result.driverLicenseDetailedInfo) +
         buildDataMatchResult(result.dataMatchResult) +
         buildDocumentClassInfoResult(result.documentClassInfo) +
@@ -187,6 +188,7 @@ class BlinkIdResultBuilder {
         buildResult(result.manufacturingYear, "Manufacturing year") +
         buildResult(result.mothersName, "Mother's name") +
         buildResult(result.fathersName, "Father's name") +
+        buildParentsInfoResult(result.parentsInfo) +
         buildResult(result.personalIdNumber, "Personal ID number") +
         buildResult(result.profession, "Profession") +
         buildResult(result.race, "Race") +
@@ -314,6 +316,20 @@ class BlinkIdResultBuilder {
       dataMatchResultString += "${field.field?.name}: ${field.state?.name}\n";
     }
     return dataMatchResultString;
+  }
+
+  static String buildParentsInfoResult(List<ParentInfo>? parentsInfoResult) {
+    if (parentsInfoResult == null) return "";
+
+    String resultString = "";
+    for (ParentInfo parentInfo in parentsInfoResult) {
+      resultString +=
+          buildResult(parentInfo.firstName, "First name") +
+          buildResult(parentInfo.lastName, "Last name") +
+          buildResult(parentInfo.fullName, "Full name");
+    }
+
+    return resultString == "" ? "" : "Parents info:\n$resultString";
   }
 
   static String buildDependentsInfoResult(
