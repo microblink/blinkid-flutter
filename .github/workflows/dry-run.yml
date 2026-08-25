@@ -1,0 +1,35 @@
+name: Dry Run Package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Prepare Package Subfolder
+        run: cp README.md BlinkID/
+
+      - name: Install Dependencies
+        working-directory: BlinkID
+        run: flutter pub get
+
+      - name: Execute Dry Run
+        working-directory: BlinkID
+        run: dart pub publish --dry-run
