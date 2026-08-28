@@ -105,7 +105,7 @@ jobs:
 
       - name: Run Semgrep Scan
         run: >-
-          semgrep scan
+          semgrep scan --verbose
           --config p/security-audit
           --config p/secrets
           --config p/owasp-top-ten
