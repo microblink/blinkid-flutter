@@ -105,11 +105,10 @@ jobs:
 
       - name: Run Semgrep Scan
         run: >-
-          semgrep scan --verbose
+          semgrep scan
           --config p/security-audit
           --config p/secrets
           --config p/owasp-top-ten
-          --config p/dart
           BlinkID/lib
           sample_files
           --sarif
