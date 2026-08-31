@@ -168,8 +168,8 @@ class _BarcodeModuleCard extends StatelessWidget {
 
   const _BarcodeModuleCard({required this.config, required this.onChanged});
 
-  void _updateBarcode(void Function(BarcodeModuleSettings s) update) {
-    update(config.barcode);
+  void _updateBarcode(BarcodeModuleSettings Function(BarcodeModuleSettings s) update) {
+    config.barcode = update(config.barcode);
     onChanged();
   }
 
@@ -190,25 +190,25 @@ class _BarcodeModuleCard extends StatelessWidget {
           title: 'Presence mandatory',
           subtitle: 'Barcode must be present on scanned side(s)',
           value: b.presenceMandatory,
-          onChanged: (v) => _updateBarcode((s) => s.presenceMandatory = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(presenceMandatory: v)),
         ),
         SampleBoolSettingTile(
           title: 'Barcode image return',
           value: b.barcodeImageReturnEnabled,
           onChanged: (v) =>
-              _updateBarcode((s) => s.barcodeImageReturnEnabled = v),
+              _updateBarcode((s) => s.copyWith(barcodeImageReturnEnabled: v)),
         ),
         SampleSectionLabel('Document barcodes'),
         SampleBoolSettingTile(
           title: 'PDF417 scanning',
           value: b.pdf417ScanningEnabled,
           onChanged: (v) =>
-              _updateBarcode((s) => s.pdf417ScanningEnabled = v),
+              _updateBarcode((s) => s.copyWith(pdf417ScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'QR scanning',
           value: b.qrScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.qrScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(qrScanningEnabled: v)),
         ),
         SampleSectionLabel('Retail formats'),
         Padding(
@@ -223,44 +223,44 @@ class _BarcodeModuleCard extends StatelessWidget {
         SampleBoolSettingTile(
           title: 'UPC-E',
           value: b.upceScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.upceScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(upceScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'UPC-A',
           value: b.upcaScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.upcaScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(upcaScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'Code 128',
           value: b.code128ScanningEnabled,
           onChanged: (v) =>
-              _updateBarcode((s) => s.code128ScanningEnabled = v),
+              _updateBarcode((s) => s.copyWith(code128ScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'Code 39',
           value: b.code39ScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.code39ScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(code39ScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'EAN-8',
           value: b.ean8ScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.ean8ScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(ean8ScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'EAN-13',
           value: b.ean13ScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.ean13ScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(ean13ScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'ITF',
           value: b.itfScanningEnabled,
-          onChanged: (v) => _updateBarcode((s) => s.itfScanningEnabled = v),
+          onChanged: (v) => _updateBarcode((s) => s.copyWith(itfScanningEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'DataMatrix',
           value: b.dataMatrixScanningEnabled,
           onChanged: (v) =>
-              _updateBarcode((s) => s.dataMatrixScanningEnabled = v),
+              _updateBarcode((s) => s.copyWith(dataMatrixScanningEnabled: v)),
         ),
       ],
     );
@@ -276,8 +276,8 @@ class _DocumentCaptureModuleCard extends StatelessWidget {
     required this.onChanged,
   });
 
-  void _update(void Function(DocumentCaptureModuleSettings s) update) {
-    update(config.documentCapture);
+  void _update(DocumentCaptureModuleSettings Function(DocumentCaptureModuleSettings s) update) {
+    config.documentCapture = update(config.documentCapture);
     onChanged();
   }
 
@@ -298,109 +298,109 @@ class _DocumentCaptureModuleCard extends StatelessWidget {
           title: 'Document image return',
           value: d.documentImageReturnEnabled,
           onChanged: (v) =>
-              _update((s) => s.documentImageReturnEnabled = v),
+              _update((s) => s.copyWith(documentImageReturnEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'Input image return',
           subtitle: 'Increases memory usage',
           value: d.inputImageReturnEnabled,
-          onChanged: (v) => _update((s) => s.inputImageReturnEnabled = v),
+          onChanged: (v) => _update((s) => s.copyWith(inputImageReturnEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'Unsupported documents allowed',
           value: d.unsupportedDocumentsAllowed,
           onChanged: (v) =>
-              _update((s) => s.unsupportedDocumentsAllowed = v),
+              _update((s) => s.copyWith(unsupportedDocumentsAllowed: v)),
         ),
         SampleBoolSettingTile(
           title: 'Skip second side with no extractable data',
           value: d.secondSideWithNoExtractableDataSkipped,
           onChanged: (v) =>
-              _update((s) => s.secondSideWithNoExtractableDataSkipped = v),
+              _update((s) => s.copyWith(secondSideWithNoExtractableDataSkipped: v)),
         ),
         SampleSectionLabel('Face & passport'),
         SampleBoolSettingTile(
           title: 'Face image extraction',
           value: d.faceImageExtractionEnabled,
           onChanged: (v) =>
-              _update((s) => s.faceImageExtractionEnabled = v),
+              _update((s) => s.copyWith(faceImageExtractionEnabled: v)),
         ),
         SampleBoolSettingTile(
           title: 'Face image presence mandatory',
           value: d.faceImagePresenceMandatory,
           onChanged: (v) =>
-              _update((s) => s.faceImagePresenceMandatory = v),
+              _update((s) => s.copyWith(faceImagePresenceMandatory: v)),
         ),
         SampleBoolSettingTile(
           title: 'Passport data page scan only',
           value: d.passportDataPageScanOnly,
-          onChanged: (v) => _update((s) => s.passportDataPageScanOnly = v),
+          onChanged: (v) => _update((s) => s.copyWith(passportDataPageScanOnly: v)),
         ),
         SampleSectionLabel('Image quality'),
         _SensitivityDropdown(
           label: 'Blur sensitivity',
           value: d.blurSensitivityLevel,
-          onChanged: (v) => _update((s) => s.blurSensitivityLevel = v),
+          onChanged: (v) => _update((s) => s.copyWith(blurSensitivityLevel: v)),
         ),
         SampleBoolSettingTile(
           title: 'Reject image with blur',
           value: d.imageWithBlurRejected,
-          onChanged: (v) => _update((s) => s.imageWithBlurRejected = v),
+          onChanged: (v) => _update((s) => s.copyWith(imageWithBlurRejected: v)),
         ),
         _SensitivityDropdown(
           label: 'Glare sensitivity',
           value: d.glareSensitivityLevel,
-          onChanged: (v) => _update((s) => s.glareSensitivityLevel = v),
+          onChanged: (v) => _update((s) => s.copyWith(glareSensitivityLevel: v)),
         ),
         SampleBoolSettingTile(
           title: 'Reject image with glare',
           value: d.imageWithGlareRejected,
-          onChanged: (v) => _update((s) => s.imageWithGlareRejected = v),
+          onChanged: (v) => _update((s) => s.copyWith(imageWithGlareRejected: v)),
         ),
         _SensitivityDropdown(
           label: 'Tilt sensitivity',
           value: d.tiltSensitivityLevel,
-          onChanged: (v) => _update((s) => s.tiltSensitivityLevel = v),
+          onChanged: (v) => _update((s) => s.copyWith(tiltSensitivityLevel: v)),
         ),
         SampleBoolSettingTile(
           title: 'Reject poor lighting',
           value: d.imageWithPoorLightingRejected,
           onChanged: (v) =>
-              _update((s) => s.imageWithPoorLightingRejected = v),
+              _update((s) => s.copyWith(imageWithPoorLightingRejected: v)),
         ),
         SampleBoolSettingTile(
           title: 'Reject hand occlusion',
           value: d.imageWithHandOcclusionRejected,
           onChanged: (v) =>
-              _update((s) => s.imageWithHandOcclusionRejected = v),
+              _update((s) => s.copyWith(imageWithHandOcclusionRejected: v)),
         ),
         SampleIntSettingField(
           label: 'Dots per inch',
           value: d.dotsPerInch,
           min: 100,
           max: 400,
-          onChanged: (v) => _update((s) => s.dotsPerInch = v),
+          onChanged: (v) => _update((s) => s.copyWith(dotsPerInch: v)),
         ),
         _DoubleSettingField(
           label: 'Extension factor',
           value: d.extensionFactor,
           min: 0,
           max: 1,
-          onChanged: (v) => _update((s) => s.extensionFactor = v),
+          onChanged: (v) => _update((s) => s.copyWith(extensionFactor: v)),
         ),
         SampleSectionLabel('Direct API'),
         SampleBoolSettingTile(
           title: 'Input image cropped',
           subtitle: 'For pre-cropped Direct API images only',
           value: d.inputImageCropped,
-          onChanged: (v) => _update((s) => s.inputImageCropped = v),
+          onChanged: (v) => _update((s) => s.copyWith(inputImageCropped: v)),
         ),
         _DoubleSettingField(
           label: 'Input image margin',
           value: d.inputImageMargin ?? 0.02,
           min: 0,
           max: 1,
-          onChanged: (v) => _update((s) => s.inputImageMargin = v),
+          onChanged: (v) => _update((s) => s.copyWith(inputImageMargin: v)),
         ),
       ],
     );
@@ -429,7 +429,7 @@ class _MrzModuleCard extends StatelessWidget {
           subtitle: 'MRZ must be present on scanned side(s)',
           value: config.mrz.presenceMandatory,
           onChanged: (v) {
-            config.mrz.presenceMandatory = v;
+            config.mrz = config.mrz.copyWith(presenceMandatory: v);
             onChanged();
           },
         ),
@@ -444,8 +444,8 @@ class _VizModuleCard extends StatelessWidget {
 
   const _VizModuleCard({required this.config, required this.onChanged});
 
-  void _update(void Function(VizModuleSettings s) update) {
-    update(config.viz);
+  void _update(VizModuleSettings Function(VizModuleSettings s) update) {
+    config.viz = update(config.viz);
     onChanged();
   }
 
@@ -464,25 +464,25 @@ class _VizModuleCard extends StatelessWidget {
         SampleBoolSettingTile(
           title: 'Presence mandatory',
           value: v.presenceMandatory,
-          onChanged: (val) => _update((s) => s.presenceMandatory = val),
+          onChanged: (val) => _update((s) => s.copyWith(presenceMandatory: val)),
         ),
         SampleBoolSettingTile(
           title: 'Signature image extraction',
           value: v.signatureImageExtractionEnabled,
           onChanged: (val) =>
-              _update((s) => s.signatureImageExtractionEnabled = val),
+              _update((s) => s.copyWith(signatureImageExtractionEnabled: val)),
         ),
         SampleBoolSettingTile(
           title: 'Character validation',
           value: v.characterValidationEnabled,
           onChanged: (val) =>
-              _update((s) => s.characterValidationEnabled = val),
+              _update((s) => s.copyWith(characterValidationEnabled: val)),
         ),
         SampleBoolSettingTile(
           title: 'Result aggregation',
           subtitle: 'Aggregate data from multiple frames (video only)',
           value: v.resultAggregationEnabled,
-          onChanged: (val) => _update((s) => s.resultAggregationEnabled = val),
+          onChanged: (val) => _update((s) => s.copyWith(resultAggregationEnabled: val)),
         ),
       ],
     );

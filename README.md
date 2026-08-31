@@ -20,10 +20,14 @@ However, since the wrapper is open source, you can add the features you need on 
 - [Scanning modules](#scanning-modules)
 - [Plugin specifics](#plugin-specifics)
   - [Scanning methods](#scanning-methods)
+    - [performScan](#performscan)
+    - [performDirectApiScan](#performdirectapiscan)
+    - [Custom scanner UI](#custom-scanner-ui)
   - [SDK loading & unloading](#sdk-loading--unloading)
   - [BlinkID settings](#blinkid-settings)
   - [BlinkID results](#blinkid-results)
   - [Class filter & redaction](#class-filter--redaction)
+  - [Customizing performScan strings](#customizing-performscan-strings)
 - [Migrating from v7.x](#migrating-from-v7x)
 - [Additional information](#additional-information)
 
@@ -52,6 +56,7 @@ The sample application demonstrates how the BlinkID plugin is implemented and ho
 1. **Camera scanning (`performScan`)** — default BlinkID UX with configurable scanning modules.
 2. **DirectAPI MultiSide scanning** — extract document information from two static images (gallery).
 3. **DirectAPI SingleSide scanning** — extract document information from a single static image (gallery).
+4. **Custom scanner UI** — a fully custom Flutter overlay built on top of `BlinkIdScannerView`, demonstrating guidance text, flip animation, scan timeout, and retry logic.
 
 The sample UI lets you toggle and configure each scanning module (Document Capture, Barcode, MRZ, VIZ), session timeouts, UX options, class filter, and redaction — the same settings you would configure in your own app.
 
@@ -142,6 +147,8 @@ id("org.jetbrains.kotlin.android") version "2.2.21" apply false
 
 No Jetpack Compose setup is required in your app. The plugin uses BlinkID's Activity-based scanning flow (`MbBlinkIdScan`); Compose runtime libraries are resolved transitively through the plugin. If your app already uses Compose for its own UI, you can keep your existing Compose configuration — the plugin does not declare a Compose BOM.
 
+The plugin's own manifest declares `android.permission.CAMERA` (merged into your app's manifest automatically) — you do not need to add it yourself. The plugin requests it at runtime before starting the camera (both `performScan` and `BlinkIdScannerView`); see [Camera permission](#camera-permission) under Custom scanner UI for the denial-handling flow.
+
 ### 5. iOS — permissions and deployment target
 Set the minimum iOS deployment target to **16.0** in your Xcode project (or `ios/Podfile` / `IPHONEOS_DEPLOYMENT_TARGET` in xcconfig files).
 
@@ -230,7 +237,7 @@ final classFilter = ClassFilter()
   ];
 ```
 
-> **Tip:** Set a module to `null` (or omit it) to disable that module entirely. For example, an MRZ-only passport flow can use `BlinkIdScanningSettings(mrzModule: MrzModuleSettings())` with all other modules omitted.
+> **Tip:** Leave a module **unset** for the SDK default (enabled). Set it explicitly to **`null`** to disable that module entirely — omitting it is not the same as disabling it. For example, an MRZ-only passport flow must null out the other three: `BlinkIdScanningSettings(mrzModule: MrzModuleSettings(), documentCaptureModule: null, barcodeModule: null, vizModule: null)`.
 
 ### 4. Scan and handle results
 ```dart
@@ -296,16 +303,21 @@ BlinkIdScanningSettings(
     passportDataPageScanOnly: true,
   ),
   mrzModule: MrzModuleSettings(),
+  barcodeModule: null, // explicitly disabled — see the Tip above
+  vizModule: null,
 )
 ```
 
 **Standalone barcode scanning** — disable document capture; enable only barcode formats you need:
 ```dart
 BlinkIdScanningSettings(
+  documentCaptureModule: null, // required: retail formats need capture disabled
   barcodeModule: BarcodeModuleSettings(
     pdf417ScanningEnabled: true,
     qrScanningEnabled: true,
   ),
+  mrzModule: null,
+  vizModule: null,
 )
 ```
 
@@ -330,10 +342,10 @@ Key VIZ settings:
 The BlinkID plugin implementation is located in the `BlinkID/lib` folder, while platform-specific implementation is located in the `BlinkID/android` and `BlinkID/ios` folders.
 
 ### <a name="scanning-methods"></a> Scanning methods
-The BlinkID plugin exposes two scanning methods and two lifecycle methods.
+The BlinkID plugin exposes two camera scanning methods, a custom scanner widget, and two lifecycle methods.
 
-#### `performScan`
-Launches camera scanning with the BlinkID UX.
+#### <a name="performscan"></a> `performScan`
+Launches camera scanning with the built-in BlinkID UX.
 
 | Parameter | Type | Required | Description |
 |:----------|:-----|:--------:|:------------|
@@ -347,7 +359,7 @@ Returns `Future<BlinkIdScanningResult?>`.
 
 Implementation: [`BlinkID/lib/src/blinkid_flutter_method_channel.dart`](BlinkID/lib/src/blinkid_flutter_method_channel.dart)
 
-#### `performDirectApiScan`
+#### <a name="performdirectapiscan"></a> `performDirectApiScan`
 Extracts data from one or two Base64-encoded static images.
 
 | Parameter | Type | Required | Description |
@@ -361,6 +373,183 @@ Extracts data from one or two Base64-encoded static images.
 Returns `Future<BlinkIdScanningResult?>`.
 
 For `ScanningMode.automatic`, `firstImage` should be the front side and `secondImage` the back side. For `ScanningMode.single`, `firstImage` can be either side. Single-sided documents (e.g. passports) are detected automatically.
+
+#### <a name="custom-scanner-ui"></a> Custom scanner UI
+
+`BlinkIdScannerView` is a Flutter platform view that gives you complete control over the scanning UI. Use it when you need custom strings, branding, animations, or any overlay behavior that `performScan` does not expose.
+
+##### Key classes
+
+| Class | Description |
+|:------|:------------|
+| `BlinkIdScannerController` | `ChangeNotifier` that manages scan state, phase, and guidance. Create one instance per scan screen. |
+| `BlinkIdScannerView` | Platform view widget that renders the camera surface. Mount it once the controller is initialized. |
+| `BlinkIdScannerStatus` | Scan lifecycle: `uninitialized` → `loadingSdk` → `initializing` → `ready` → `scanning` → `processing` → `done` (or `error`, or `cameraPermissionRequired` — see [Camera permission](#camera-permission)). |
+| `BlinkIdScanPhase` | Current side: `front`, `flip` (waiting for user to flip document), `back`. |
+| `BlinkIdGuidance` | Per-frame detection guidance sealed class (see below). |
+
+##### Quick-start
+
+```dart
+import 'dart:async';
+
+import 'package:blinkid_flutter/blinkid_flutter.dart';
+
+class ScanScreen extends StatefulWidget { ... }
+
+class _ScanScreenState extends State<ScanScreen> {
+  late final BlinkIdScannerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = BlinkIdScannerController();
+    unawaited(_run());
+  }
+
+  Future<void> _run() async {
+    // 1. Load SDK + prepare platform view creation params.
+    await _controller.initialize(sdkSettings, sessionSettings);
+
+    // 2. scan() suspends until the platform view is ready, then starts scanning.
+    //    Loop so reset() (retry) resumes without rebuilding the screen.
+    while (mounted) {
+      try {
+        final result = await _controller.scan();
+        // success — use result
+        return;
+      } on BlinkIdScanCancelException {
+        Navigator.pop(context);
+        return;
+      } on BlinkIdScanResetException {
+        // controller.reset() was called — loop restarts scan()
+      } on BlinkIdScanCameraSwitchException {
+        // Camera switch interrupted the scan — loop restarts scan()
+        // once the new camera is ready.
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) => Stack(
+        fit: StackFit.expand,
+        children: [
+          // Always mount the view — status overlays go on top of it.
+          BlinkIdScannerView(controller: _controller),
+
+          // Show a spinner while SDK loads or view initializes.
+          if (_controller.status == BlinkIdScannerStatus.loadingSdk ||
+              _controller.status == BlinkIdScannerStatus.initializing)
+            const ColoredBox(
+              color: Colors.black,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+
+          // Show flip UI when front side is done.
+          if (_controller.phase == BlinkIdScanPhase.flip)
+            _FlipOverlay(controller: _controller),
+        ],
+      ),
+    ),
+  );
+}
+```
+
+##### Guidance stream
+
+Subscribe to `controller.guidanceStream` for per-frame detection hints:
+
+```dart
+_controller.guidanceStream.listen((guidance) {
+  switch (guidance) {
+    case BlinkIdGuidanceTooFar():    showHint('Move closer');
+    case BlinkIdGuidanceTooClose():  showHint('Move farther away');
+    case BlinkIdGuidanceTilted():    showHint('Keep document flat');
+    case BlinkIdGuidanceBlur():      showHint('Hold still');
+    case BlinkIdGuidanceGlare():     showHint('Reduce glare');
+    default:                         showHint('Align the document');
+  }
+});
+```
+
+`BlinkIdGuidanceFlipDocument` is **never** emitted to `guidanceStream` — it drives the `phase` transition from `front` to `flip` internally. Guidance events are also suppressed during the flip phase; listen to `phase` instead.
+
+Full guidance types: `searching`, `tooFar`, `tooClose`, `tooCloseToEdge`, `tilted`, `notFullyVisible`, `wrongSide`, `holdStill`, `blur`, `glare`, `lowLight`, `tooMuchLight`.
+
+##### Two-sided documents and the flip phase
+
+When the front side is complete, `phase` changes to `BlinkIdScanPhase.flip`. Show your flip animation and then call `controller.onFlipComplete()` once it finishes:
+
+```dart
+// After your animation ends:
+widget.controller.onFlipComplete();
+// phase moves to 'back' automatically once the camera sees the first back-side frame.
+```
+
+Failing to call `onFlipComplete()` leaves the scanner paused indefinitely.
+
+##### Camera selection
+
+Pass `preferredCamera` to `initialize()` to choose the starting lens:
+
+```dart
+await _controller.initialize(
+  sdkSettings,
+  sessionSettings,
+  preferredCamera: PreferredCamera.back, // or PreferredCamera.front
+);
+```
+
+To switch cameras at runtime call `switchCamera()`. It cancels any in-progress scan (the current `scan()` future completes with `BlinkIdScanCameraSwitchException`), rebinds the native camera, and returns once the controller is back in `ready` state — which is only reached once the camera has actually bound, not merely dispatched. Call `scan()` again to resume:
+
+```dart
+final activeCamera = await _controller.switchCamera(PreferredCamera.front);
+final result = await _controller.scan();
+```
+
+`switchCamera()` returns the lens actually bound, which **may differ from the request** — e.g. `front` silently resolves to `back` on a device with no front lens. The resolved value is also available afterwards via `controller.activeCamera`.
+
+`switchCamera()` throws `StateError` if the platform view is not yet attached or if `status` doesn't support switching (`uninitialized`, `loadingSdk`, `initializing`, `error`, or `cameraPermissionRequired`).
+
+##### <a name="camera-permission"></a> Camera permission
+
+The plugin requests `CAMERA` itself — both platforms show the system permission prompt before the first camera bind. If it's denied, `status` becomes `BlinkIdScannerStatus.cameraPermissionRequired` and any in-progress `scan()` completes with `BlinkIdCameraPermissionException`; check `exception.permanentlyDenied` (or `controller.lastPermissionException`) to decide between re-requesting and sending the user to system Settings. Once the host app has obtained the permission by its own means (e.g. via the `permission_handler` package, as in the example), call `controller.retryAfterPermissionGrant()` to resume:
+
+```dart
+} on BlinkIdCameraPermissionException catch (e) {
+  if (e.permanentlyDenied) {
+    await openAppSettings(); // permission_handler
+  } else if ((await Permission.camera.request()).isGranted) {
+    _controller.retryAfterPermissionGrant();
+  }
+}
+```
+
+No manifest changes are needed on Android — the plugin declares `CAMERA` itself (see "Android — minimum SDK and Kotlin version" under Plugin integration, above). On iOS, `NSCameraUsageDescription` in `Info.plist` (see "iOS — permissions and deployment target") is required, or the OS kills the app instead of prompting.
+
+##### Debug logging
+
+Enable native lifecycle log forwarding to Flutter's `debugPrint`:
+
+```dart
+_controller.setDebugLogging(true);
+// Logs appear as: [BlinkID] SideScanned — pausing for flip
+```
+
+Disabled by default — no method-channel traffic is incurred when not opted in. Safe to call before or after the platform view is created.
+
+##### Full example
+
+See [`BlinkID/example/lib/custom_scanner_screen.dart`](BlinkID/example/lib/custom_scanner_screen.dart) for a complete implementation including scan timeout, retry dialog, flip animation, and guidance overlay.
 
 ### <a name="sdk-loading--unloading"></a> SDK loading & unloading
 
@@ -393,11 +582,14 @@ This method is automatically called after each successful scan session.
 | [`MrzModuleSettings`](BlinkID/lib/src/types.dart) | MRZ presence requirement. |
 | [`BarcodeModuleSettings`](BlinkID/lib/src/types.dart) | Barcode format toggles and image return. |
 | [`VizModuleSettings`](BlinkID/lib/src/types.dart) | VIZ extraction, validation, signature return. |
-| [`BlinkIdScanningUxSettings`](BlinkID/lib/src/blinkid_settings.dart) | UX customization for camera scanning. |
+| [`BlinkIdScanningUxSettings`](BlinkID/lib/src/blinkid_settings.dart) | UX customization for `performScan` (help button, onboarding, haptics, camera). |
+| [`BlinkIdScannerController`](BlinkID/lib/src/scanner/blinkid_scanner_controller.dart) | Controller for custom scanner UI (`BlinkIdScannerView`). |
+| [`BlinkIdScannerView`](BlinkID/lib/src/scanner/blinkid_scanner_view.dart) | Platform view widget for custom scanner UI. |
+| [`BlinkIdGuidance`](BlinkID/lib/src/scanner/blinkid_guidance.dart) | Sealed class for per-frame detection guidance events. |
 
 Each Dart file documents available properties in detail. Native equivalents:
-- [Android SDK documentation](https://microblink.github.io/blinkid-android/blinkid-core/com.microblink.blinkid.core/index.html)
-- [iOS SDK documentation](https://microblink.github.io/blinkid-swift-package/documentation/blinkid/)
+- [Android SDK documentation](https://blinkid.github.io/blinkid-android/blinkid-core/com.microblink.blinkid.core/index.html)
+- [iOS SDK documentation](https://blinkid.github.io/blinkid-swift-package/documentation/blinkid/)
 
 Native deserialization implementations:
 - [Android](BlinkID/android/src/main/kotlin/com/microblink/blinkid/flutter/BlinkidDeserializationUtils.kt)
@@ -425,8 +617,8 @@ Field values use `StringResult` (with `value`, `latin`, `arabic`, etc.) and `Dat
 See [`BlinkID/lib/src/blinkid_result.dart`](BlinkID/lib/src/blinkid_result.dart) for the full result model.
 
 Native result documentation:
-- [Android](https://microblink.github.io/blinkid-android/blinkid-core/com.microblink.blinkid.core.session/-blink-id-scanning-result/index.html)
-- [iOS](https://microblink.github.io/blinkid-swift-package/documentation/blinkid/blinkidscanningresult)
+- [Android](https://blinkid.github.io/blinkid-android/blinkid-core/com.microblink.blinkid.core.session/-blink-id-scanning-result/index.html)
+- [iOS](https://blinkid.github.io/blinkid-swift-package/documentation/blinkid/blinkidscanningresult)
 
 Native serialization implementations:
 - [Android](BlinkID/android/src/main/kotlin/com/microblink/blinkid/flutter/BlinkidSerializationUtils.kt)
@@ -467,6 +659,72 @@ final resolver = RedactionSettingsResolver([
 For **DirectAPI scanning**, pass a single `RedactionSettings` object directly to `performDirectApiScan`.
 
 `RedactionMode` values: `none`, `imageOnly`, `resultFieldsOnly`, `fullResult`.
+
+### <a name="customizing-performscan-strings"></a> Customizing `performScan` strings
+
+`performScan` uses the native BlinkID UX overlay, which ships with built-in translations for 40+ languages and auto-selects based on the device locale. String customization is done through platform-native resource overrides — the SDK picks them up automatically at launch without any code changes.
+
+#### Android
+
+Add overrides in your app's `android/app/src/main/res/values/strings.xml` (or a locale-specific `values-XX/strings.xml`):
+
+```xml
+<resources>
+    <!-- Scanning instructions -->
+    <string name="mb_blinkid_front_instructions">Scan front of document</string>
+    <string name="mb_blinkid_back_instructions">Scan back of document</string>
+    <string name="mb_blinkid_camera_flip_document">Flip to back side</string>
+    <string name="mb_blinkid_move_closer">Move closer</string>
+    <string name="mb_blinkid_move_farther">Move farther away</string>
+    <string name="mb_blinkid_blur_detected">Hold still</string>
+    <string name="mb_blinkid_glare_detected">Reduce glare</string>
+    <string name="mb_blinkid_keep_document_parallel">Keep document flat</string>
+    <string name="mb_blinkid_document_not_fully_visible">Keep document fully in view</string>
+    <string name="mb_blinkid_scanning_wrong_side">Flip the document</string>
+
+    <!-- Onboarding dialog -->
+    <string name="mb_blinkid_onboarding_dialog_title">Scan your document</string>
+    <string name="mb_blinkid_onboarding_dialog_message">Place the front of your document within the frame</string>
+
+    <!-- Timeout dialog -->
+    <string name="mb_blinkid_recognition_timeout_dialog_title">Scan unsuccessful</string>
+    <string name="mb_blinkid_recognition_timeout_dialog_message">Ensure the document is well-lit and fully visible</string>
+    <string name="mb_blinkid_recognition_timeout_dialog_retry_button">Try Again</string>
+</resources>
+```
+
+For a complete list of overridable keys, extract them from the blinkid-ux AAR:
+```bash
+# Unzip the AAR and inspect res/values/values.xml
+unzip -p ~/.gradle/caches/modules-2/files-2.1/com.microblink/blinkid-ux/8000.0.0/*/blinkid-ux-8000.0.0.aar \
+  res/values/values.xml | grep 'name="mb_'
+```
+
+#### iOS
+
+Add a `BlinkID.strings` file to your `Runner` target for each locale (e.g. `en.lproj/BlinkID.strings`):
+
+```
+"mb_front_instructions" = "Scan front of document";
+"mb_back_instructions" = "Scan back of document";
+"mb_camera_flip_document" = "Flip to back side";
+"mb_move_closer" = "Move closer";
+"mb_move_farther" = "Move farther away";
+"mb_blur_detected" = "Hold still";
+"mb_glare_detected" = "Reduce glare";
+"mb_keep_document_parallel" = "Keep document flat";
+"mb_document_not_fully_visible" = "Keep document fully in view";
+"mb_scanning_wrong_side" = "Flip the document";
+"mb_onboarding_dialog_title" = "Scan your document";
+"mb_onboarding_dialog_message" = "Place the front of your document within the frame";
+"mb_recognition_timeout_dialog_title" = "Scan unsuccessful";
+"mb_recognition_timeout_dialog_message" = "Ensure the document is well-lit and fully visible";
+"mb_recognition_timeout_dialog_retry_button" = "Try Again";
+```
+
+Note: iOS keys use the `mb_` prefix (without `blinkid`), while Android uses `mb_blinkid_`.
+
+> **Custom scanner (`BlinkIdScannerView`)**: string customization is fully in Flutter — pass whatever strings you want directly to your overlay widgets.
 
 ## <a name="migrating-from-v7x"></a> Migrating from v7.x
 

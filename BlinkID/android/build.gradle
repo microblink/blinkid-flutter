@@ -9,17 +9,13 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:9.1.0")
-    }
-}
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
     }
 }
 
 apply plugin: "com.android.library"
-apply plugin: 'kotlin-parcelize'
+apply plugin: "kotlin-android"
+apply plugin: "kotlin-parcelize"
 
 // Minimum Compose runtime versions required by blinkid-ux for camera scanning (performScan).
 // These are enforced as lower bounds only — client apps may use newer Compose versions.
@@ -109,7 +105,28 @@ dependencies {
             version { require(blinkidUxMinLifecycleViewmodelCompose) }
             because(constraintReason)
         }
+
+        // Security: force patched versions of vulnerable transitive deps
+        implementation("org.bouncycastle:bcprov-jdk18on") {
+            version { require("1.80.2") }
+            because("CVE-2025-14813 (critical) fixed in 1.80.2")
+        }
+        implementation("org.bitbucket.b_c:jose4j") {
+            version { require("0.9.6") }
+            because("CVE-2024-29371 (high) fixed in 0.9.6")
+        }
+        implementation("org.jdom:jdom2") {
+            version { require("2.0.6.1") }
+            because("CVE-2021-33813 (high) fixed in 2.0.6.1")
+        }
     }
 
     implementation("com.microblink:blinkid-ux:${blinkidUxVersion}")
+
+    // CameraX for BlinkIdScannerView custom camera surface
+    def cameraXVersion = "1.6.1"
+    implementation("androidx.camera:camera-core:${cameraXVersion}")
+    implementation("androidx.camera:camera-camera2:${cameraXVersion}")
+    implementation("androidx.camera:camera-lifecycle:${cameraXVersion}")
+    implementation("androidx.camera:camera-view:${cameraXVersion}")
 }

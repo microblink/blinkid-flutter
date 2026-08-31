@@ -18,12 +18,12 @@ class BarcodeModuleSettings {
   /// if a barcode is detected on the scanned side but cannot be extracted,
   /// the presence requirement is considered fulfilled. As a result, barcode extraction
   /// will no longer be a requirement to complete the scan on next side.
-  bool presenceMandatory;
+  final bool presenceMandatory;
 
   /// Indicates whether the barcode image should be returned in the result.
   ///
   /// The DPI setting and the extension factor do not affect returned barcode image.
-  bool barcodeImageReturnEnabled;
+  final bool barcodeImageReturnEnabled;
 
   /// Enables the scanning and processing of Pdf417 barcodes.
   ///
@@ -31,7 +31,7 @@ class BarcodeModuleSettings {
   /// Because the model does not distinguish between the two types at this stage, a conflict can occur:
   /// if `PDF417` is enabled but `QR` is disabled, the analyzer may trigger for a `QR` code, causing the process to hang.
   /// To prevent this, `pdf417ScanningEnabled` and `qrScanningEnabled` must be enabled together.
-  bool pdf417ScanningEnabled;
+  final bool pdf417ScanningEnabled;
 
   /// Enables the scanning and processing of QR barcodes.
   ///
@@ -40,49 +40,49 @@ class BarcodeModuleSettings {
   /// if `PDF417` is enabled but `QR` is disabled, the analyzer may trigger for a `QR` code, causing the process to hang.
   ///
   /// To prevent this, `qrScanningEnabled` and `pdf417ScanningEnabled` must be enabled together.
-  bool qrScanningEnabled;
+  final bool qrScanningEnabled;
 
   /// Enables the scanning and processing of UPC-E barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool upceScanningEnabled;
+  final bool upceScanningEnabled;
 
   /// Enables the scanning and processing of UPC-A barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool upcaScanningEnabled;
+  final bool upcaScanningEnabled;
 
   /// Enables the scanning and processing of Code-128 barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool code128ScanningEnabled;
+  final bool code128ScanningEnabled;
 
   /// Enables the scanning and processing of Code-39 barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool code39ScanningEnabled;
+  final bool code39ScanningEnabled;
 
   /// Enables the scanning and processing of EAN-8 barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool ean8ScanningEnabled;
+  final bool ean8ScanningEnabled;
 
   /// Enables the scanning and processing of EAN-13 barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool ean13ScanningEnabled;
+  final bool ean13ScanningEnabled;
 
   /// Enables the scanning and processing of ITF barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool itfScanningEnabled;
+  final bool itfScanningEnabled;
 
   /// Enables the scanning and processing of DataMatrix barcodes.
   ///
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
-  bool dataMatrixScanningEnabled;
+  final bool dataMatrixScanningEnabled;
 
-  BarcodeModuleSettings({
+  const BarcodeModuleSettings({
     this.presenceMandatory = false,
     this.barcodeImageReturnEnabled = false,
     this.pdf417ScanningEnabled = true,
@@ -97,8 +97,36 @@ class BarcodeModuleSettings {
     this.dataMatrixScanningEnabled = false,
   });
 
-  factory BarcodeModuleSettings.fromJson(Map<String, dynamic> json) =>
-      _$BarcodeModuleSettingsFromJson(json);
+  /// Returns a copy with the given fields replaced.
+  BarcodeModuleSettings copyWith({
+    bool? presenceMandatory,
+    bool? barcodeImageReturnEnabled,
+    bool? pdf417ScanningEnabled,
+    bool? qrScanningEnabled,
+    bool? upceScanningEnabled,
+    bool? upcaScanningEnabled,
+    bool? code128ScanningEnabled,
+    bool? code39ScanningEnabled,
+    bool? ean8ScanningEnabled,
+    bool? ean13ScanningEnabled,
+    bool? itfScanningEnabled,
+    bool? dataMatrixScanningEnabled,
+  }) => BarcodeModuleSettings(
+    presenceMandatory: presenceMandatory ?? this.presenceMandatory,
+    barcodeImageReturnEnabled: barcodeImageReturnEnabled ?? this.barcodeImageReturnEnabled,
+    pdf417ScanningEnabled: pdf417ScanningEnabled ?? this.pdf417ScanningEnabled,
+    qrScanningEnabled: qrScanningEnabled ?? this.qrScanningEnabled,
+    upceScanningEnabled: upceScanningEnabled ?? this.upceScanningEnabled,
+    upcaScanningEnabled: upcaScanningEnabled ?? this.upcaScanningEnabled,
+    code128ScanningEnabled: code128ScanningEnabled ?? this.code128ScanningEnabled,
+    code39ScanningEnabled: code39ScanningEnabled ?? this.code39ScanningEnabled,
+    ean8ScanningEnabled: ean8ScanningEnabled ?? this.ean8ScanningEnabled,
+    ean13ScanningEnabled: ean13ScanningEnabled ?? this.ean13ScanningEnabled,
+    itfScanningEnabled: itfScanningEnabled ?? this.itfScanningEnabled,
+    dataMatrixScanningEnabled: dataMatrixScanningEnabled ?? this.dataMatrixScanningEnabled,
+  );
+
+  factory BarcodeModuleSettings.fromJson(Map<String, dynamic> json) => _$BarcodeModuleSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$BarcodeModuleSettingsToJson(this);
 }
 
@@ -114,12 +142,12 @@ class DocumentCaptureModuleSettings {
   ///
   /// Requires the input image to consist solely of the cropped document image with perspective correction applied.
   /// This only applies to images from the DirectAPI method of scanning — with images from the default scanning, the setting will be ignored.
-  bool inputImageCropped;
+  final bool inputImageCropped;
 
   /// Enables the scanning and processing of unsupported document types.
   ///
   /// A document is considered unsupported if its classification result is `OTHER`.
-  bool unsupportedDocumentsAllowed;
+  final bool unsupportedDocumentsAllowed;
 
   /// Indicates whether the back side scan should be skipped if the document supports only image capture on that side.
   ///
@@ -128,14 +156,14 @@ class DocumentCaptureModuleSettings {
   ///
   /// If set to `true` (default), the scanning process will stop after the front side for such documents.
   /// If set to `false`, the back side will be captured, even though no data extraction is performed.
-  bool secondSideWithNoExtractableDataSkipped;
+  final bool secondSideWithNoExtractableDataSkipped;
 
   /// Indicates whether only the passport data page should be scanned.
   ///
   /// Scan only the data page (page containing `MRZ`) of the passport.
   ///
   /// If set to `false`, it will be required to scan the second page of certain passports.
-  bool passportDataPageScanOnly;
+  final bool passportDataPageScanOnly;
 
   /// Enables the extraction of the document's face image.
   ///
@@ -143,7 +171,7 @@ class DocumentCaptureModuleSettings {
   ///
   /// For supported documents, the requirement for its presence is determined by document rules.
   /// For unsupported documents, presence is optional.
-  bool faceImageExtractionEnabled;
+  final bool faceImageExtractionEnabled;
 
   /// If set to `true`, face image presence will be mandatory for the scanned document.
   ///
@@ -153,17 +181,17 @@ class DocumentCaptureModuleSettings {
   /// if a face image is detected on the scanned side but cannot be extracted,
   /// the presence requirement is considered fulfilled. As a result, face image extraction
   /// will no longer be required to complete the scan on the next side.
-  bool faceImagePresenceMandatory;
+  final bool faceImagePresenceMandatory;
 
   /// Indicates whether input images should be returned in the result.
   ///
   /// Saves the input images at the moment of data extraction or timeout.
   /// This significantly increases memory consumption. Scanning performance is not affected.
-  bool inputImageReturnEnabled;
+  final bool inputImageReturnEnabled;
 
   /// Indicates whether the cropped document image should be returned in the result.
   ///
-  bool documentImageReturnEnabled;
+  final bool documentImageReturnEnabled;
 
   /// Defines the minimum required margin (in percentage) between the edge of the input image and the document.
   ///
@@ -175,17 +203,17 @@ class DocumentCaptureModuleSettings {
   /// The setting is ignored if `inputImageCropped == true`.
   ///
   /// Allowed minimal value is `0.0` and maximum value is `1.0`.
-  double? inputImageMargin;
+  final double? inputImageMargin;
 
   /// The DPI value for the cropped document, face and signature image.
   ///
   /// Allowed minimal value is `100` and maximum value is `400`.
-  int dotsPerInch;
+  final int dotsPerInch;
 
   /// The extension factor for the cropped document image. Applicable only to document images.
   /// Allowed minimal value is `0.0` and maximum value is `1.0`.
   ///
-  double extensionFactor;
+  final double extensionFactor;
 
   /// The sensitivity of blur detection in the document image.
   ///
@@ -197,51 +225,51 @@ class DocumentCaptureModuleSettings {
   /// High – highly sensitive to blur; it may detect blur even if it only resembles blur.
   ///
   /// See [SensitivityLevel] for more information
-  SensitivityLevel blurSensitivityLevel;
+  final SensitivityLevel blurSensitivityLevel;
 
   /// Indicates whether images with detected blur should be rejected.
   ///
   /// If `true`, images with detected blur will be excluded from further processing.
   ///
   /// If `false`, images will still be processed and blur status will be reported in the result.
-  bool imageWithBlurRejected;
+  final bool imageWithBlurRejected;
 
   /// The sensitivity of glare detection in the document image.
   ///
   /// Low – less sensitive to glare.
   /// High – highly sensitive to glare.
   /// See [SensitivityLevel] for more information
-  SensitivityLevel glareSensitivityLevel;
+  final SensitivityLevel glareSensitivityLevel;
 
   /// Indicates whether images with detected glare should be rejected.
   ///
   /// If `true`, images with detected glare will be excluded from further processing.
   ///
   /// If `false`, images will still be processed and glare status will be reported in the result.
-  bool imageWithGlareRejected;
+  final bool imageWithGlareRejected;
 
   /// The sensitivity of allowed detected tilt of the document in the image.
   ///
   /// Low – less sensitive to tilt.
   /// High – highly sensitive to tilt.
   /// See [SensitivityLevel] for more information
-  SensitivityLevel tiltSensitivityLevel;
+  final SensitivityLevel tiltSensitivityLevel;
 
   /// Indicates whether images with poor lighting conditions should be rejected.
   ///
   /// Poor lighting conditions are represented as either `tooBright` or `tooDark`.
   ///
   /// If `true`, such images will be excluded from further processing.
-  bool imageWithPoorLightingRejected;
+  final bool imageWithPoorLightingRejected;
 
   /// Indicates whether images occluded by a hand should be rejected.
   ///
   /// If `true`, occluded images will be excluded from further processing.
   ///
   /// This setting is applicable only if `inputImageCropped == false`.
-  bool imageWithHandOcclusionRejected;
+  final bool imageWithHandOcclusionRejected;
 
-  DocumentCaptureModuleSettings({
+  const DocumentCaptureModuleSettings({
     this.inputImageCropped = false,
     this.unsupportedDocumentsAllowed = false,
     this.secondSideWithNoExtractableDataSkipped = true,
@@ -261,6 +289,51 @@ class DocumentCaptureModuleSettings {
     this.imageWithPoorLightingRejected = true,
     this.imageWithHandOcclusionRejected = true,
   });
+
+  /// Returns a copy with the given fields replaced.
+  ///
+  /// [inputImageMargin] can only be replaced with a non-null value here —
+  /// construct a new instance directly if you need to clear it back to null.
+  DocumentCaptureModuleSettings copyWith({
+    bool? inputImageCropped,
+    bool? unsupportedDocumentsAllowed,
+    bool? secondSideWithNoExtractableDataSkipped,
+    bool? passportDataPageScanOnly,
+    bool? faceImageExtractionEnabled,
+    bool? faceImagePresenceMandatory,
+    bool? inputImageReturnEnabled,
+    bool? documentImageReturnEnabled,
+    double? inputImageMargin,
+    int? dotsPerInch,
+    double? extensionFactor,
+    SensitivityLevel? blurSensitivityLevel,
+    bool? imageWithBlurRejected,
+    SensitivityLevel? glareSensitivityLevel,
+    bool? imageWithGlareRejected,
+    SensitivityLevel? tiltSensitivityLevel,
+    bool? imageWithPoorLightingRejected,
+    bool? imageWithHandOcclusionRejected,
+  }) => DocumentCaptureModuleSettings(
+    inputImageCropped: inputImageCropped ?? this.inputImageCropped,
+    unsupportedDocumentsAllowed: unsupportedDocumentsAllowed ?? this.unsupportedDocumentsAllowed,
+    secondSideWithNoExtractableDataSkipped:
+        secondSideWithNoExtractableDataSkipped ?? this.secondSideWithNoExtractableDataSkipped,
+    passportDataPageScanOnly: passportDataPageScanOnly ?? this.passportDataPageScanOnly,
+    faceImageExtractionEnabled: faceImageExtractionEnabled ?? this.faceImageExtractionEnabled,
+    faceImagePresenceMandatory: faceImagePresenceMandatory ?? this.faceImagePresenceMandatory,
+    inputImageReturnEnabled: inputImageReturnEnabled ?? this.inputImageReturnEnabled,
+    documentImageReturnEnabled: documentImageReturnEnabled ?? this.documentImageReturnEnabled,
+    inputImageMargin: inputImageMargin ?? this.inputImageMargin,
+    dotsPerInch: dotsPerInch ?? this.dotsPerInch,
+    extensionFactor: extensionFactor ?? this.extensionFactor,
+    blurSensitivityLevel: blurSensitivityLevel ?? this.blurSensitivityLevel,
+    imageWithBlurRejected: imageWithBlurRejected ?? this.imageWithBlurRejected,
+    glareSensitivityLevel: glareSensitivityLevel ?? this.glareSensitivityLevel,
+    imageWithGlareRejected: imageWithGlareRejected ?? this.imageWithGlareRejected,
+    tiltSensitivityLevel: tiltSensitivityLevel ?? this.tiltSensitivityLevel,
+    imageWithPoorLightingRejected: imageWithPoorLightingRejected ?? this.imageWithPoorLightingRejected,
+    imageWithHandOcclusionRejected: imageWithHandOcclusionRejected ?? this.imageWithHandOcclusionRejected,
+  );
 
   factory DocumentCaptureModuleSettings.fromJson(Map<String, dynamic> json) =>
       _$DocumentCaptureModuleSettingsFromJson(json);
@@ -283,12 +356,15 @@ class MrzModuleSettings {
   /// if an MRZ is detected on the scanned side but cannot be extracted,
   /// the presence requirement is considered fulfilled. As a result, MRZ extraction
   /// will no longer be required to complete the scan on the next side.
-  bool presenceMandatory;
+  final bool presenceMandatory;
 
-  MrzModuleSettings({this.presenceMandatory = false});
+  const MrzModuleSettings({this.presenceMandatory = false});
 
-  factory MrzModuleSettings.fromJson(Map<String, dynamic> json) =>
-      _$MrzModuleSettingsFromJson(json);
+  /// Returns a copy with the given fields replaced.
+  MrzModuleSettings copyWith({bool? presenceMandatory}) =>
+      MrzModuleSettings(presenceMandatory: presenceMandatory ?? this.presenceMandatory);
+
+  factory MrzModuleSettings.fromJson(Map<String, dynamic> json) => _$MrzModuleSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$MrzModuleSettingsToJson(this);
 }
 
@@ -312,13 +388,13 @@ class VizModuleSettings {
   /// In case of a timeout and advancement to the next step in the scanning flow,
   /// if a Viz was not extracted fully from a front side, we'll proceed to extract Viz
   /// from the back side, if present.
-  bool presenceMandatory;
+  final bool presenceMandatory;
 
   /// Enables the extraction of the document's signature image if supported.
   ///
   /// For supported documents, signature image extraction is determined by document rules.
   /// For unsupported documents, extraction won't be performed.
-  bool signatureImageExtractionEnabled;
+  final bool signatureImageExtractionEnabled;
 
   /// Indicates whether character validation is enabled.
   ///
@@ -327,7 +403,7 @@ class VizModuleSettings {
   /// All fields have to be successfully validated in order to successfully scan a document.
   /// Setting is used to improve scanning accuracy.
   ///
-  bool characterValidationEnabled;
+  final bool characterValidationEnabled;
 
   /// Indicates whether the aggregation of data from multiple input images is enabled.
   ///
@@ -338,17 +414,29 @@ class VizModuleSettings {
   /// of being sourced from a single image.
   ///
   /// This only applies to images from `Video` input image source - for images from `Photo` source, setting will be ignored.
-  bool resultAggregationEnabled;
+  final bool resultAggregationEnabled;
 
-  VizModuleSettings({
+  const VizModuleSettings({
     this.presenceMandatory = false,
     this.signatureImageExtractionEnabled = false,
     this.characterValidationEnabled = true,
     this.resultAggregationEnabled = true,
   });
 
-  factory VizModuleSettings.fromJson(Map<String, dynamic> json) =>
-      _$VizModuleSettingsFromJson(json);
+  /// Returns a copy with the given fields replaced.
+  VizModuleSettings copyWith({
+    bool? presenceMandatory,
+    bool? signatureImageExtractionEnabled,
+    bool? characterValidationEnabled,
+    bool? resultAggregationEnabled,
+  }) => VizModuleSettings(
+    presenceMandatory: presenceMandatory ?? this.presenceMandatory,
+    signatureImageExtractionEnabled: signatureImageExtractionEnabled ?? this.signatureImageExtractionEnabled,
+    characterValidationEnabled: characterValidationEnabled ?? this.characterValidationEnabled,
+    resultAggregationEnabled: resultAggregationEnabled ?? this.resultAggregationEnabled,
+  );
+
+  factory VizModuleSettings.fromJson(Map<String, dynamic> json) => _$VizModuleSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$VizModuleSettingsToJson(this);
 }
 
@@ -427,8 +515,7 @@ class ClassFilter {
   /// Constructor for only adding the document clasess that will be excluded for the scanning process.
   ClassFilter.withExcludedDocumentClasses(this.excludeDocuments);
 
-  factory ClassFilter.fromJson(Map<String, dynamic> json) =>
-      _$ClassFilterFromJson(json);
+  factory ClassFilter.fromJson(Map<String, dynamic> json) => _$ClassFilterFromJson(json);
   Map<String, dynamic> toJson() => _$ClassFilterToJson(this);
 }
 
@@ -469,8 +556,7 @@ class RedactionSettings {
     this.documentFilter,
   });
 
-  factory RedactionSettings.fromJson(Map<String, dynamic> json) =>
-      _$RedactionSettingsFromJson(json);
+  factory RedactionSettings.fromJson(Map<String, dynamic> json) => _$RedactionSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$RedactionSettingsToJson(this);
 }
 
@@ -498,8 +584,7 @@ class RedactionSettingsResolver {
 
   RedactionSettingsResolver(this.documentRedactionList);
 
-  factory RedactionSettingsResolver.fromJson(Map<String, dynamic> json) =>
-      _$RedactionSettingsResolverFromJson(json);
+  factory RedactionSettingsResolver.fromJson(Map<String, dynamic> json) => _$RedactionSettingsResolverFromJson(json);
   Map<String, dynamic> toJson() => _$RedactionSettingsResolverToJson(this);
 }
 
@@ -520,8 +605,7 @@ class DetailedFieldType {
   /// Both the [FieldType] and [AlphabetType] are mandatory.
   DetailedFieldType(this.fieldType, this.alphabetType);
 
-  factory DetailedFieldType.fromJson(Map<String, dynamic> json) =>
-      _$DetailedFieldTypeFromJson(json);
+  factory DetailedFieldType.fromJson(Map<String, dynamic> json) => _$DetailedFieldTypeFromJson(json);
   Map<String, dynamic> toJson() => _$DetailedFieldTypeToJson(this);
 }
 
@@ -554,8 +638,7 @@ class DocumentFilter {
   /// DocumentFilter(Country.usa, Region.california, DocumentType.dl);
   /// ```
   DocumentFilter({this.country, this.region, this.documentType});
-  factory DocumentFilter.fromJson(Map<String, dynamic> json) =>
-      _$DocumentFilterFromJson(json);
+  factory DocumentFilter.fromJson(Map<String, dynamic> json) => _$DocumentFilterFromJson(json);
   Map<String, dynamic> toJson() => _$DocumentFilterToJson(this);
 }
 
@@ -576,16 +659,13 @@ class DocumentNumberRedactionSettings {
   /// This results that no digits within the document number will be visible.
   ///
   /// If any parameter is null, the value of the parameter will set to `0`.
-  DocumentNumberRedactionSettings({
-    int? prefixDigitsVisible,
-    int? suffixDigitsVisible,
-  }) : prefixDigitsVisible = prefixDigitsVisible ?? 0,
-       suffixDigitsVisible = suffixDigitsVisible ?? 0;
+  DocumentNumberRedactionSettings({int? prefixDigitsVisible, int? suffixDigitsVisible})
+    : prefixDigitsVisible = prefixDigitsVisible ?? 0,
+      suffixDigitsVisible = suffixDigitsVisible ?? 0;
 
   factory DocumentNumberRedactionSettings.fromJson(Map<String, dynamic> json) =>
       _$DocumentNumberRedactionSettingsFromJson(json);
-  Map<String, dynamic> toJson() =>
-      _$DocumentNumberRedactionSettingsToJson(this);
+  Map<String, dynamic> toJson() => _$DocumentNumberRedactionSettingsToJson(this);
 }
 
 /// BlinkID enums
@@ -829,7 +909,7 @@ enum Country {
   uae,
   @JsonValue("gganda")
   gganda,
-  @JsonValue("uK") // TODO should be uk
+  @JsonValue("uK")
   uK,
   @JsonValue("ukraine")
   ukraine,
@@ -1873,15 +1953,9 @@ class DocumentClassInfo {
 
   /// Represents the document class information.
   DocumentClassInfo(Map<String, dynamic> nativeClassInfo) {
-    country = enumFromValue(
-      Country.values.toList(),
-      nativeClassInfo['country'],
-    );
+    country = enumFromValue(Country.values.toList(), nativeClassInfo['country']);
     region = enumFromValue(Region.values.toList(), nativeClassInfo['region']);
-    documentType = enumFromValue(
-      DocumentType.values.toList(),
-      nativeClassInfo['documentType'],
-    );
+    documentType = enumFromValue(DocumentType.values.toList(), nativeClassInfo['documentType']);
     empty = nativeClassInfo['empty'];
     countryName = nativeClassInfo['countryName'];
     isoNumericCountryCode = nativeClassInfo['isoNumericCountryCode'];
@@ -1904,19 +1978,12 @@ class DataMatchResult {
 
   /// Represents the result of the data match.
   DataMatchResult(Map<String, dynamic> nativeDataMatchResult) {
-    overallState = enumFromValue(
-      DataMatchState.values,
-      nativeDataMatchResult["overallState"],
-    );
-    states =
-        nativeDataMatchResult["states"] != null
-            ? (nativeDataMatchResult["states"] as List<dynamic>)
-                .map(
-                  (item) =>
-                      DataMatchResultField(Map<String, dynamic>.from(item)),
-                )
-                .toList()
-            : null;
+    overallState = enumFromValue(DataMatchState.values, nativeDataMatchResult["overallState"]);
+    states = nativeDataMatchResult["states"] != null
+        ? (nativeDataMatchResult["states"] as List<dynamic>)
+              .map((item) => DataMatchResultField(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
   }
 }
 
@@ -1934,14 +2001,8 @@ class DataMatchResultField {
 
   /// Represents the state of the field in the data match.
   DataMatchResultField(Map<String, dynamic> nativeDataMatchResultField) {
-    field = enumFromValue(
-      DataMatchField.values,
-      nativeDataMatchResultField["field"],
-    );
-    state = enumFromValue(
-      DataMatchState.values,
-      nativeDataMatchResultField["state"],
-    );
+    field = enumFromValue(DataMatchField.values, nativeDataMatchResultField["field"]);
+    state = enumFromValue(DataMatchState.values, nativeDataMatchResultField["state"]);
   }
 }
 
@@ -2023,16 +2084,10 @@ class StringResult {
     arabic = nativeStringResult['arabic'];
     cyrillic = nativeStringResult['cyrillic'];
     greek = nativeStringResult['greek'];
-    location =
-        nativeStringResult['location'] != null
-            ? Location(
-              Map<String, dynamic>.from(nativeStringResult['location']),
-            )
-            : null;
-    side =
-        nativeStringResult['side'] != null
-            ? Side(Map<String, dynamic>.from(nativeStringResult['side']))
-            : null;
+    location = nativeStringResult['location'] != null
+        ? Location(Map<String, dynamic>.from(nativeStringResult['location']))
+        : null;
+    side = nativeStringResult['side'] != null ? Side(Map<String, dynamic>.from(nativeStringResult['side'])) : null;
   }
 }
 
@@ -2075,29 +2130,16 @@ class Location {
 
   /// Represents the information about the location of an element within a document or image.
   Location(Map<String, dynamic> nativeLocation) {
-    latin =
-        nativeLocation['latin'] != null
-            ? Rectangle(Map<String, dynamic>.from(nativeLocation['latin']))
-            : null;
-    arabic =
-        nativeLocation['arabic'] != null
-            ? Rectangle(Map<String, dynamic>.from(nativeLocation['arabic']))
-            : null;
-    cyrillic =
-        nativeLocation['cyrillic'] != null
-            ? Rectangle(Map<String, dynamic>.from(nativeLocation['cyrillic']))
-            : null;
-    greek =
-        nativeLocation['greek'] != null
-            ? Rectangle(Map<String, dynamic>.from(nativeLocation['greek']))
-            : null;
+    latin = nativeLocation['latin'] != null ? Rectangle(Map<String, dynamic>.from(nativeLocation['latin'])) : null;
+    arabic = nativeLocation['arabic'] != null ? Rectangle(Map<String, dynamic>.from(nativeLocation['arabic'])) : null;
+    cyrillic = nativeLocation['cyrillic'] != null
+        ? Rectangle(Map<String, dynamic>.from(nativeLocation['cyrillic']))
+        : null;
+    greek = nativeLocation['greek'] != null ? Rectangle(Map<String, dynamic>.from(nativeLocation['greek'])) : null;
   }
 }
 
 /// Side of the document on which the specific result is located.
-// TODO: Native SDK returns ScanningSide (first/second), not front/back. Remove
-// DocumentSide, use ScanningSide here, and parse string values from native
-// (see blinkid-react-native BlinkID/src/types.ts).
 class Side {
   /// Document side of the result extracted from the OCR in the latin alphabet.
   DocumentSide? latin;
@@ -2121,7 +2163,6 @@ class Side {
 }
 
 /// Define document side where the document field is located
-// TODO: Remove DocumentSide; StringResult.side uses ScanningSide in blinkid-core.
 enum DocumentSide {
   ///The field was not detected
   none,
@@ -2183,13 +2224,8 @@ class Date {
   }
 }
 
-StringResult? createStringResult(
-  Map<String, dynamic> result,
-  String propertyName,
-) {
-  return result[propertyName] != null
-      ? StringResult(Map<String, dynamic>.from(result[propertyName]))
-      : null;
+StringResult? createStringResult(Map<String, dynamic> result, String propertyName) {
+  return result[propertyName] != null ? StringResult(Map<String, dynamic>.from(result[propertyName])) : null;
 }
 
 ///  Represents detailed extracted information about the driver license.
@@ -2220,33 +2256,16 @@ class DriverLicenseDetailedInfo<T> {
   List<VehicleClassInfo>? vehicleClassesInfo;
 
   ///  Represents detailed extracted information about the driver license.
-  DriverLicenseDetailedInfo(
-    Map<String, dynamic> nativeDriverLicenseDetailedInfo,
-  ) {
-    restrictions = handleStringType(
-      nativeDriverLicenseDetailedInfo,
-      'restrictions',
-    );
-    endorsements = handleStringType(
-      nativeDriverLicenseDetailedInfo,
-      'endorsements',
-    );
-    vehicleClass = handleStringType(
-      nativeDriverLicenseDetailedInfo,
-      'vehicleClass',
-    );
-    conditions = handleStringType(
-      nativeDriverLicenseDetailedInfo,
-      'conditions',
-    );
-    vehicleClassesInfo =
-        nativeDriverLicenseDetailedInfo['vehicleClassesInfo'] != null
-            ? List<VehicleClassInfo<T>>.from(
-              nativeDriverLicenseDetailedInfo['vehicleClassesInfo'].map(
-                (v) => VehicleClassInfo<T>(v),
-              ),
-            )
-            : null;
+  DriverLicenseDetailedInfo(Map<String, dynamic> nativeDriverLicenseDetailedInfo) {
+    restrictions = handleStringType(nativeDriverLicenseDetailedInfo, 'restrictions');
+    endorsements = handleStringType(nativeDriverLicenseDetailedInfo, 'endorsements');
+    vehicleClass = handleStringType(nativeDriverLicenseDetailedInfo, 'vehicleClass');
+    conditions = handleStringType(nativeDriverLicenseDetailedInfo, 'conditions');
+    vehicleClassesInfo = nativeDriverLicenseDetailedInfo['vehicleClassesInfo'] != null
+        ? List<VehicleClassInfo<T>>.from(
+            nativeDriverLicenseDetailedInfo['vehicleClassesInfo'].map((v) => VehicleClassInfo<T>(v)),
+          )
+        : null;
   }
 }
 
@@ -2273,20 +2292,12 @@ class VehicleClassInfo<T> {
   VehicleClassInfo(Map<String, dynamic> nativeVehicleClassInfo) {
     licenceType = handleStringType(nativeVehicleClassInfo, 'licenceType');
     vehicleClass = handleStringType(nativeVehicleClassInfo, 'vehicleClass');
-    effectiveDate =
-        nativeVehicleClassInfo['effectiveDate'] != null
-            ? DateResult<T>(
-              Map<String, dynamic>.from(
-                nativeVehicleClassInfo['effectiveDate'],
-              ),
-            )
-            : null;
-    expiryDate =
-        nativeVehicleClassInfo['expiryDate'] != null
-            ? DateResult<T>(
-              Map<String, dynamic>.from(nativeVehicleClassInfo['expiryDate']),
-            )
-            : null;
+    effectiveDate = nativeVehicleClassInfo['effectiveDate'] != null
+        ? DateResult<T>(Map<String, dynamic>.from(nativeVehicleClassInfo['effectiveDate']))
+        : null;
+    expiryDate = nativeVehicleClassInfo['expiryDate'] != null
+        ? DateResult<T>(Map<String, dynamic>.from(nativeVehicleClassInfo['expiryDate']))
+        : null;
   }
 }
 
@@ -2309,12 +2320,9 @@ class DependentInfo {
 
   /// Information about the dependent.
   DependentInfo(Map<String, dynamic> nativeDependentInfo) {
-    dateOfBirth =
-        nativeDependentInfo['dateOfBirth'] != null
-            ? DateResult<StringResult>(
-              Map<String, dynamic>.from(nativeDependentInfo['dateOfBirth']),
-            )
-            : null;
+    dateOfBirth = nativeDependentInfo['dateOfBirth'] != null
+        ? DateResult<StringResult>(Map<String, dynamic>.from(nativeDependentInfo['dateOfBirth']))
+        : null;
     sex = createStringResult(nativeDependentInfo, 'sex');
     documentNumber = createStringResult(nativeDependentInfo, 'documentNumber');
     fullName = createStringResult(nativeDependentInfo, 'fullName');
@@ -2355,48 +2363,25 @@ class SingleSideScanningResult {
   ///
   /// Contains the data extracted from the Visual Inspection Zone, Machine Readable Zone,
   /// barcode, the input image, and the cropped document, face, and signature images.
-  SingleSideScanningResult(
-    Map<String, dynamic> nativeSingleSideScanningResult,
-  ) {
-    viz =
-        nativeSingleSideScanningResult["viz"] != null
-            ? VizResult(
-              Map<String, dynamic>.from(nativeSingleSideScanningResult['viz']),
-            )
-            : null;
-    mrz =
-        nativeSingleSideScanningResult["mrz"] != null
-            ? MrzResult(
-              Map<String, dynamic>.from(nativeSingleSideScanningResult['mrz']),
-            )
-            : null;
-    barcode =
-        nativeSingleSideScanningResult["barcode"] != null
-            ? BarcodeResult(
-              Map<String, dynamic>.from(
-                nativeSingleSideScanningResult['barcode'],
-              ),
-            )
-            : null;
+  SingleSideScanningResult(Map<String, dynamic> nativeSingleSideScanningResult) {
+    viz = nativeSingleSideScanningResult["viz"] != null
+        ? VizResult(Map<String, dynamic>.from(nativeSingleSideScanningResult['viz']))
+        : null;
+    mrz = nativeSingleSideScanningResult["mrz"] != null
+        ? MrzResult(Map<String, dynamic>.from(nativeSingleSideScanningResult['mrz']))
+        : null;
+    barcode = nativeSingleSideScanningResult["barcode"] != null
+        ? BarcodeResult(Map<String, dynamic>.from(nativeSingleSideScanningResult['barcode']))
+        : null;
     inputImage = nativeSingleSideScanningResult["inputImage"];
     barcodeInputImage = nativeSingleSideScanningResult["barcodeInputImage"];
     documentImage = nativeSingleSideScanningResult["documentImage"];
-    faceImage =
-        nativeSingleSideScanningResult["faceImage"] != null
-            ? DetailedCroppedImageResult(
-              Map<String, dynamic>.from(
-                nativeSingleSideScanningResult["faceImage"],
-              ),
-            )
-            : null;
-    signatureImage =
-        nativeSingleSideScanningResult["signatureImage"] != null
-            ? DetailedCroppedImageResult(
-              Map<String, dynamic>.from(
-                nativeSingleSideScanningResult["signatureImage"],
-              ),
-            )
-            : null;
+    faceImage = nativeSingleSideScanningResult["faceImage"] != null
+        ? DetailedCroppedImageResult(Map<String, dynamic>.from(nativeSingleSideScanningResult["faceImage"]))
+        : null;
+    signatureImage = nativeSingleSideScanningResult["signatureImage"] != null
+        ? DetailedCroppedImageResult(Map<String, dynamic>.from(nativeSingleSideScanningResult["signatureImage"]))
+        : null;
   }
 }
 
@@ -2595,75 +2580,42 @@ class VizResult {
     firstName = createStringResult(nativeVizResult, 'firstName');
     lastName = createStringResult(nativeVizResult, 'lastName');
     fullName = createStringResult(nativeVizResult, 'fullName');
-    additionalNameInformation = createStringResult(
-      nativeVizResult,
-      'additionalNameInformation',
-    );
+    additionalNameInformation = createStringResult(nativeVizResult, 'additionalNameInformation');
     localizedName = createStringResult(nativeVizResult, 'localizedName');
     fathersName = createStringResult(nativeVizResult, 'fathersName');
     mothersName = createStringResult(nativeVizResult, 'mothersName');
     address = createStringResult(nativeVizResult, 'address');
-    additionalAddressInformation = createStringResult(
-      nativeVizResult,
-      'additionalAddressInformation',
-    );
-    additionalOptionalAddressInformation = createStringResult(
-      nativeVizResult,
-      'additionalOptionalAddressInformation',
-    );
+    additionalAddressInformation = createStringResult(nativeVizResult, 'additionalAddressInformation');
+    additionalOptionalAddressInformation = createStringResult(nativeVizResult, 'additionalOptionalAddressInformation');
     placeOfBirth = createStringResult(nativeVizResult, 'placeOfBirth');
     nationality = createStringResult(nativeVizResult, 'nationality');
     race = createStringResult(nativeVizResult, 'race');
     religion = createStringResult(nativeVizResult, 'religion');
     profession = createStringResult(nativeVizResult, 'profession');
     maritalStatus = createStringResult(nativeVizResult, 'maritalStatus');
-    residentialStatus = createStringResult(
-      nativeVizResult,
-      'residentialStatus',
-    );
+    residentialStatus = createStringResult(nativeVizResult, 'residentialStatus');
     employer = createStringResult(nativeVizResult, 'employer');
     sex = createStringResult(nativeVizResult, 'sex');
     sponsor = createStringResult(nativeVizResult, 'sponsor');
     bloodType = createStringResult(nativeVizResult, 'bloodType');
-    dateOfBirth =
-        nativeVizResult["dateOfBirth"] != null
-            ? DateResult<StringResult>(
-              Map<String, dynamic>.from(nativeVizResult["dateOfBirth"]),
-            )
-            : null;
-    dateOfIssue =
-        nativeVizResult["dateOfIssue"] != null
-            ? DateResult<StringResult>(
-              Map<String, dynamic>.from(nativeVizResult["dateOfIssue"]),
-            )
-            : null;
-    dateOfExpiry =
-        nativeVizResult["dateOfExpiry"] != null
-            ? DateResult<StringResult>(
-              Map<String, dynamic>.from(nativeVizResult["dateOfExpiry"]),
-            )
-            : null;
-    dateOfEntry =
-        nativeVizResult["dateOfEntry"] != null
-            ? DateResult<StringResult>(
-              Map<String, dynamic>.from(nativeVizResult["dateOfEntry"]),
-            )
-            : null;
+    dateOfBirth = nativeVizResult["dateOfBirth"] != null
+        ? DateResult<StringResult>(Map<String, dynamic>.from(nativeVizResult["dateOfBirth"]))
+        : null;
+    dateOfIssue = nativeVizResult["dateOfIssue"] != null
+        ? DateResult<StringResult>(Map<String, dynamic>.from(nativeVizResult["dateOfIssue"]))
+        : null;
+    dateOfExpiry = nativeVizResult["dateOfExpiry"] != null
+        ? DateResult<StringResult>(Map<String, dynamic>.from(nativeVizResult["dateOfExpiry"]))
+        : null;
+    dateOfEntry = nativeVizResult["dateOfEntry"] != null
+        ? DateResult<StringResult>(Map<String, dynamic>.from(nativeVizResult["dateOfEntry"]))
+        : null;
     localityCode = createStringResult(nativeVizResult, "localityCode");
     maidenName = createStringResult(nativeVizResult, "maidenName");
     municipalityCode = createStringResult(nativeVizResult, "municipalityCode");
-    municipalityOfRegistration = createStringResult(
-      nativeVizResult,
-      "municipalityOfRegistration",
-    );
-    pollingStationCode = createStringResult(
-      nativeVizResult,
-      "pollingStationCode",
-    );
-    registrationCenterCode = createStringResult(
-      nativeVizResult,
-      "registrationCenterCode",
-    );
+    municipalityOfRegistration = createStringResult(nativeVizResult, "municipalityOfRegistration");
+    pollingStationCode = createStringResult(nativeVizResult, "pollingStationCode");
+    registrationCenterCode = createStringResult(nativeVizResult, "registrationCenterCode");
     sectionCode = createStringResult(nativeVizResult, "sectionCode");
     stateCode = createStringResult(nativeVizResult, "stateCode");
     stateName = createStringResult(nativeVizResult, "stateName");
@@ -2671,82 +2623,42 @@ class VizResult {
     documentNumber = createStringResult(nativeVizResult, 'documentNumber');
     cardAccessNumber = createStringResult(nativeVizResult, "cardAccessNumber");
     personalIdNumber = createStringResult(nativeVizResult, 'personalIdNumber');
-    documentAdditionalNumber = createStringResult(
-      nativeVizResult,
-      'documentAdditionalNumber',
-    );
-    documentOptionalAdditionalNumber = createStringResult(
-      nativeVizResult,
-      'documentOptionalAdditionalNumber',
-    );
-    additionalPersonalIdNumber = createStringResult(
-      nativeVizResult,
-      'additionalPersonalIdNumber',
-    );
+    documentAdditionalNumber = createStringResult(nativeVizResult, 'documentAdditionalNumber');
+    documentOptionalAdditionalNumber = createStringResult(nativeVizResult, 'documentOptionalAdditionalNumber');
+    additionalPersonalIdNumber = createStringResult(nativeVizResult, 'additionalPersonalIdNumber');
     issuingAuthority = createStringResult(nativeVizResult, 'issuingAuthority');
     visaType = createStringResult(nativeVizResult, 'visaType');
-    driverLicenseDetailedInfo =
-        nativeVizResult["driverLicenseDetailedInfo"] != null
-            ? DriverLicenseDetailedInfo(
-              Map<String, dynamic>.from(
-                nativeVizResult["driverLicenseDetailedInfo"],
-              ),
-            )
-            : null;
+    driverLicenseDetailedInfo = nativeVizResult["driverLicenseDetailedInfo"] != null
+        ? DriverLicenseDetailedInfo(Map<String, dynamic>.from(nativeVizResult["driverLicenseDetailedInfo"]))
+        : null;
 
     documentSubtype = createStringResult(nativeVizResult, 'documentSubtype');
     remarks = createStringResult(nativeVizResult, 'remarks');
-    residencePermitType = createStringResult(
-      nativeVizResult,
-      'residencePermitType',
-    );
-    manufacturingYear = createStringResult(
-      nativeVizResult,
-      'manufacturingYear',
-    );
+    residencePermitType = createStringResult(nativeVizResult, 'residencePermitType');
+    manufacturingYear = createStringResult(nativeVizResult, 'manufacturingYear');
     vehicleType = createStringResult(nativeVizResult, 'vehicleType');
-    eligibilityCategory = createStringResult(
-      nativeVizResult,
-      'eligibilityCategory',
-    );
-    specificDocumentValidity = createStringResult(
-      nativeVizResult,
-      'specificDocumentValidity',
-    );
-    dependentsInfo =
-        nativeVizResult["dependentsInfo"] != null
-            ? (nativeVizResult["dependentsInfo"] as List<dynamic>)
-                .map((item) => DependentInfo(Map<String, dynamic>.from(item)))
-                .toList()
-            : null;
+    eligibilityCategory = createStringResult(nativeVizResult, 'eligibilityCategory');
+    specificDocumentValidity = createStringResult(nativeVizResult, 'specificDocumentValidity');
+    dependentsInfo = nativeVizResult["dependentsInfo"] != null
+        ? (nativeVizResult["dependentsInfo"] as List<dynamic>)
+              .map((item) => DependentInfo(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
     vehicleOwner = createStringResult(nativeVizResult, 'vehicleOwner');
     countryCode = createStringResult(nativeVizResult, 'countryCode');
-    certificateNumber = createStringResult(
-      nativeVizResult,
-      'certificateNumber',
-    );
-    nationalInsuranceNumber = createStringResult(
-      nativeVizResult,
-      'nationalInsuranceNumber',
-    );
-    effectiveDate =
-        nativeVizResult["effectiveDate"] != null
-            ? DateResult<StringResult>(
-              Map<String, dynamic>.from(nativeVizResult["effectiveDate"]),
-            )
-            : null;
-    parentsInfo =
-        nativeVizResult["parentsInfo"] != null
-            ? (nativeVizResult["parentsInfo"] as List<dynamic>)
-                .map((item) => ParentInfo(Map<String, dynamic>.from(item)))
-                .toList()
-            : null;
+    certificateNumber = createStringResult(nativeVizResult, 'certificateNumber');
+    nationalInsuranceNumber = createStringResult(nativeVizResult, 'nationalInsuranceNumber');
+    effectiveDate = nativeVizResult["effectiveDate"] != null
+        ? DateResult<StringResult>(Map<String, dynamic>.from(nativeVizResult["effectiveDate"]))
+        : null;
+    parentsInfo = nativeVizResult["parentsInfo"] != null
+        ? (nativeVizResult["parentsInfo"] as List<dynamic>)
+              .map((item) => ParentInfo(Map<String, dynamic>.from(item)))
+              .toList()
+        : null;
     husbandName = createStringResult(nativeVizResult, 'husbandName');
     legalStatus = createStringResult(nativeVizResult, 'legalStatus');
-    socialSecurityStatus = createStringResult(
-      nativeVizResult,
-      'socialSecurityStatus',
-    );
+    socialSecurityStatus = createStringResult(nativeVizResult, 'socialSecurityStatus');
     workRestriction = createStringResult(nativeVizResult, 'workRestriction');
   }
 }
@@ -2838,31 +2750,20 @@ class MrzResult {
 
   /// Represents the result of the MRZ recognition.
   MrzResult(Map<String, dynamic> nativeMRZResult) {
-    // TODO: Serialize documentType as string on native side (e.g. "passport") instead
-    // of int ordinal; update enumFromValue usage accordingly.
-    documentType = enumFromValue(
-      MRZDocumentType.values,
-      nativeMRZResult["documentType"],
-    );
+    documentType = enumFromValue(MRZDocumentType.values, nativeMRZResult["documentType"]);
     primaryID = nativeMRZResult['primaryID'];
     secondaryID = nativeMRZResult['secondaryID'];
     issuer = nativeMRZResult['issuer'];
-    dateOfBirth =
-        nativeMRZResult['dateOfBirth'] != null
-            ? DateResult(
-              Map<String, dynamic>.from(nativeMRZResult['dateOfBirth']),
-            )
-            : null;
+    dateOfBirth = nativeMRZResult['dateOfBirth'] != null
+        ? DateResult(Map<String, dynamic>.from(nativeMRZResult['dateOfBirth']))
+        : null;
     documentNumber = nativeMRZResult['documentNumber'];
     nationality = nativeMRZResult['nationality'];
     gender = nativeMRZResult['gender'];
     documentCode = nativeMRZResult['documentCode'];
-    dateOfExpiry =
-        nativeMRZResult['dateOfExpiry'] != null
-            ? DateResult(
-              Map<String, dynamic>.from(nativeMRZResult['dateOfExpiry']),
-            )
-            : null;
+    dateOfExpiry = nativeMRZResult['dateOfExpiry'] != null
+        ? DateResult(Map<String, dynamic>.from(nativeMRZResult['dateOfExpiry']))
+        : null;
     opt1 = nativeMRZResult['opt1'];
     opt2 = nativeMRZResult['opt2'];
     rawMRZString = nativeMRZResult['rawMRZString'];
@@ -2963,18 +2864,14 @@ class BarcodeResult {
 
   ///  Represents the data extracted from the barcode.
   BarcodeResult(Map<String, dynamic> nativeBarcodeResult) {
-    barcodeData =
-        nativeBarcodeResult['barcodeData'] != null
-            ? BarcodeData(
-              Map<String, dynamic>.from(nativeBarcodeResult['barcodeData']),
-            )
-            : null;
+    barcodeData = nativeBarcodeResult['barcodeData'] != null
+        ? BarcodeData(Map<String, dynamic>.from(nativeBarcodeResult['barcodeData']))
+        : null;
     firstName = nativeBarcodeResult['firstName'];
     middleName = nativeBarcodeResult['middleName'];
     lastName = nativeBarcodeResult['lastName'];
     fullName = nativeBarcodeResult['fullName'];
-    additionalNameInformation =
-        nativeBarcodeResult['additionalNameInformation'];
+    additionalNameInformation = nativeBarcodeResult['additionalNameInformation'];
     address = nativeBarcodeResult['address'];
     placeOfBirth = nativeBarcodeResult['placeOfBirth'];
     nationality = nativeBarcodeResult['nationality'];
@@ -2985,52 +2882,28 @@ class BarcodeResult {
     residentialStatus = nativeBarcodeResult['residentialStatus'];
     employer = nativeBarcodeResult['employer'];
     sex = nativeBarcodeResult['sex'];
-    dateOfBirth =
-        nativeBarcodeResult['dateOfBirth'] != null
-            ? DateResult<String>(
-              Map<String, dynamic>.from(nativeBarcodeResult['dateOfBirth']),
-            )
-            : null;
-    dateOfBirth =
-        nativeBarcodeResult['dateOfIssue'] != null
-            ? DateResult<String>(
-              Map<String, dynamic>.from(nativeBarcodeResult['dateOfIssue']),
-            )
-            : null;
-    dateOfBirth =
-        nativeBarcodeResult['dateOfExpiry'] != null
-            ? DateResult<String>(
-              Map<String, dynamic>.from(nativeBarcodeResult['dateOfExpiry']),
-            )
-            : null;
+    dateOfBirth = nativeBarcodeResult['dateOfBirth'] != null
+        ? DateResult<String>(Map<String, dynamic>.from(nativeBarcodeResult['dateOfBirth']))
+        : null;
+    dateOfBirth = nativeBarcodeResult['dateOfIssue'] != null
+        ? DateResult<String>(Map<String, dynamic>.from(nativeBarcodeResult['dateOfIssue']))
+        : null;
+    dateOfBirth = nativeBarcodeResult['dateOfExpiry'] != null
+        ? DateResult<String>(Map<String, dynamic>.from(nativeBarcodeResult['dateOfExpiry']))
+        : null;
     documentNumber = nativeBarcodeResult['documentNumber'];
     personalIdNumber = nativeBarcodeResult['personalIdNumber'];
     documentAdditionalNumber = nativeBarcodeResult['documentAdditionalNumber'];
     issuingAuthority = nativeBarcodeResult['issuingAuthority'];
-    addressDetailedInfo =
-        nativeBarcodeResult['addressDetailedInfo'] != null
-            ? AddressDetailedInfo(
-              Map<String, dynamic>.from(
-                nativeBarcodeResult['addressDetailedInfo'],
-              ),
-            )
-            : null;
-    driverLicenseDetailedInfo =
-        nativeBarcodeResult['driverLicenseDetailedInfo'] != null
-            ? DriverLicenseDetailedInfo<String>(
-              Map<String, dynamic>.from(
-                nativeBarcodeResult['driverLicenseDetailedInfo'],
-              ),
-            )
-            : null;
-    extendedElements =
-        nativeBarcodeResult['extendedElements'] != null
-            ? BarcodeExtendedElements(
-              Map<String, dynamic>.from(
-                nativeBarcodeResult['extendedElements'],
-              ),
-            )
-            : null;
+    addressDetailedInfo = nativeBarcodeResult['addressDetailedInfo'] != null
+        ? AddressDetailedInfo(Map<String, dynamic>.from(nativeBarcodeResult['addressDetailedInfo']))
+        : null;
+    driverLicenseDetailedInfo = nativeBarcodeResult['driverLicenseDetailedInfo'] != null
+        ? DriverLicenseDetailedInfo<String>(Map<String, dynamic>.from(nativeBarcodeResult['driverLicenseDetailedInfo']))
+        : null;
+    extendedElements = nativeBarcodeResult['extendedElements'] != null
+        ? BarcodeExtendedElements(Map<String, dynamic>.from(nativeBarcodeResult['extendedElements']))
+        : null;
     parsed = nativeBarcodeResult['parsed'];
   }
 }
@@ -3051,10 +2924,7 @@ class BarcodeData {
 
   /// Represents the raw, unparsed data extracted from a scanned barcode.
   BarcodeData(Map<String, dynamic> nativeBarcodeData) {
-    barcodeType = enumFromValue(
-      BarcodeType.values,
-      nativeBarcodeData["barcodeType"],
-    );
+    barcodeType = enumFromValue(BarcodeType.values, nativeBarcodeData["barcodeType"]);
     rawData = nativeBarcodeData["rawData"];
     stringData = nativeBarcodeData["stringData"];
     uncertain = nativeBarcodeData["uncertain"];
@@ -3825,8 +3695,7 @@ class BarcodeExtendedElements {
   /// Currently this is only used for AAMVACompliant documents.
   BarcodeExtendedElements(Map<String, dynamic> nativeBarcodeExtendedElements)
     : addressCity = nativeBarcodeExtendedElements['addressCity'],
-      addressJurisdictionCode =
-          nativeBarcodeExtendedElements['addressJurisdictionCode'],
+      addressJurisdictionCode = nativeBarcodeExtendedElements['addressJurisdictionCode'],
       addressPostalCode = nativeBarcodeExtendedElements['addressPostalCode'],
       addressStreet = nativeBarcodeExtendedElements['addressStreet'],
       addressStreet2 = nativeBarcodeExtendedElements['addressStreet2'],
@@ -3836,14 +3705,12 @@ class BarcodeExtendedElements {
       akaGivenName = nativeBarcodeExtendedElements['akaGivenName'],
       akaMiddleName = nativeBarcodeExtendedElements['akaMiddleName'],
       akaPrefixName = nativeBarcodeExtendedElements['akaPrefixName'],
-      akaSocialSecurityNumber =
-          nativeBarcodeExtendedElements['akaSocialSecurityNumber'],
+      akaSocialSecurityNumber = nativeBarcodeExtendedElements['akaSocialSecurityNumber'],
       akaSuffixName = nativeBarcodeExtendedElements['akaSuffixName'],
       auditInformation = nativeBarcodeExtendedElements['auditInformation'],
       cardRevisionDate = nativeBarcodeExtendedElements['cardRevisionDate'],
       complianceType = nativeBarcodeExtendedElements['complianceType'],
-      countryIdentification =
-          nativeBarcodeExtendedElements['countryIdentification'],
+      countryIdentification = nativeBarcodeExtendedElements['countryIdentification'],
       customerFamilyName = nativeBarcodeExtendedElements['customerFamilyName'],
       customerIdNumber = nativeBarcodeExtendedElements['customerIdNumber'],
       customerFirstName = nativeBarcodeExtendedElements['customerFirstName'],
@@ -3851,87 +3718,58 @@ class BarcodeExtendedElements {
       customerMiddleName = nativeBarcodeExtendedElements['customerMiddleName'],
       dataDiscriminator = nativeBarcodeExtendedElements['dataDiscriminator'],
       dateOfBirth = nativeBarcodeExtendedElements['dateOfBirth'],
-      documentDiscriminator =
-          nativeBarcodeExtendedElements['documentDiscriminator'],
-      documentExpirationDate =
-          nativeBarcodeExtendedElements['documentExpirationDate'],
-      documentExpirationMonth =
-          nativeBarcodeExtendedElements['documentExpirationMonth'],
+      documentDiscriminator = nativeBarcodeExtendedElements['documentDiscriminator'],
+      documentExpirationDate = nativeBarcodeExtendedElements['documentExpirationDate'],
+      documentExpirationMonth = nativeBarcodeExtendedElements['documentExpirationMonth'],
       documentIssueDate = nativeBarcodeExtendedElements['documentIssueDate'],
-      documentNonexpiring =
-          nativeBarcodeExtendedElements['documentNonexpiring'],
+      documentNonexpiring = nativeBarcodeExtendedElements['documentNonexpiring'],
       documentType = nativeBarcodeExtendedElements['documentType'],
       eyeColor = nativeBarcodeExtendedElements['eyeColor'],
-      familyNameTruncation =
-          nativeBarcodeExtendedElements['familyNameTruncation'],
-      federalCommercialVehicleCodes =
-          nativeBarcodeExtendedElements['federalCommercialVehicleCodes'],
-      firstNameTruncation =
-          nativeBarcodeExtendedElements['firstNameTruncation'],
+      familyNameTruncation = nativeBarcodeExtendedElements['familyNameTruncation'],
+      federalCommercialVehicleCodes = nativeBarcodeExtendedElements['federalCommercialVehicleCodes'],
+      firstNameTruncation = nativeBarcodeExtendedElements['firstNameTruncation'],
       fullAddress = nativeBarcodeExtendedElements['fullAddress'],
       hairColor = nativeBarcodeExtendedElements['hairColor'],
       height = nativeBarcodeExtendedElements['height'],
       heightIn = nativeBarcodeExtendedElements['heightIn'],
       heightCm = nativeBarcodeExtendedElements['heightCm'],
-      issuerIdentificationNumber =
-          nativeBarcodeExtendedElements['issuerIdentificationNumber'],
-      issuingJurisdiction =
-          nativeBarcodeExtendedElements['issuingJurisdiction'],
-      issuingJurisdictionName =
-          nativeBarcodeExtendedElements['issuingJurisdictionName'],
-      jurisdictionEndorsementCodes =
-          nativeBarcodeExtendedElements['jurisdictionEndorsementCodes'],
-      jurisdictionEndorsmentCodeDescription =
-          nativeBarcodeExtendedElements['jurisdictionEndorsmentCodeDescription'],
-      jurisdictionRestrictionCodeDescription =
-          nativeBarcodeExtendedElements['jurisdictionRestrictionCodeDescription'],
-      jurisdictionRestrictionCodes =
-          nativeBarcodeExtendedElements['jurisdictionRestrictionCodes'],
-      jurisdictionVehicleClass =
-          nativeBarcodeExtendedElements['jurisdictionVehicleClass'],
+      issuerIdentificationNumber = nativeBarcodeExtendedElements['issuerIdentificationNumber'],
+      issuingJurisdiction = nativeBarcodeExtendedElements['issuingJurisdiction'],
+      issuingJurisdictionName = nativeBarcodeExtendedElements['issuingJurisdictionName'],
+      jurisdictionEndorsementCodes = nativeBarcodeExtendedElements['jurisdictionEndorsementCodes'],
+      jurisdictionEndorsmentCodeDescription = nativeBarcodeExtendedElements['jurisdictionEndorsmentCodeDescription'],
+      jurisdictionRestrictionCodeDescription = nativeBarcodeExtendedElements['jurisdictionRestrictionCodeDescription'],
+      jurisdictionRestrictionCodes = nativeBarcodeExtendedElements['jurisdictionRestrictionCodes'],
+      jurisdictionVehicleClass = nativeBarcodeExtendedElements['jurisdictionVehicleClass'],
       jurisdictionVehicleClassificationDescription =
           nativeBarcodeExtendedElements['jurisdictionVehicleClassificationDescription'],
-      jurisdictionVersionNumber =
-          nativeBarcodeExtendedElements['jurisdictionVersionNumber'],
-      limitedDurationDocument =
-          nativeBarcodeExtendedElements['limitedDurationDocument'],
+      jurisdictionVersionNumber = nativeBarcodeExtendedElements['jurisdictionVersionNumber'],
+      limitedDurationDocument = nativeBarcodeExtendedElements['limitedDurationDocument'],
       medicalIndicator = nativeBarcodeExtendedElements['medicalIndicator'],
-      middleNameTruncation =
-          nativeBarcodeExtendedElements['middleNameTruncation'],
+      middleNameTruncation = nativeBarcodeExtendedElements['middleNameTruncation'],
       namePrefix = nativeBarcodeExtendedElements['namePrefix'],
       nameSuffix = nativeBarcodeExtendedElements['nameSuffix'],
       nonResident = nativeBarcodeExtendedElements['nonResident'],
       numberOfDuplicates = nativeBarcodeExtendedElements['numberOfDuplicates'],
       organDonor = nativeBarcodeExtendedElements['organDonor'],
-      permitExpirationDate =
-          nativeBarcodeExtendedElements['permitExpirationDate'],
+      permitExpirationDate = nativeBarcodeExtendedElements['permitExpirationDate'],
       permitIdentifier = nativeBarcodeExtendedElements['permitIdentifier'],
       permitIssueDate = nativeBarcodeExtendedElements['permitIssueDate'],
       placeOfBirth = nativeBarcodeExtendedElements['placeOfBirth'],
       raceEthnicity = nativeBarcodeExtendedElements['raceEthnicity'],
       residenceCity = nativeBarcodeExtendedElements['residenceCity'],
-      residenceFullAddress =
-          nativeBarcodeExtendedElements['residenceFullAddress'],
-      residenceJurisdictionCode =
-          nativeBarcodeExtendedElements['residenceJurisdictionCode'],
-      residencePostalCode =
-          nativeBarcodeExtendedElements['residencePostalCode'],
-      residenceStreetAddress =
-          nativeBarcodeExtendedElements['residenceStreetAddress'],
-      residenceStreetAddress2 =
-          nativeBarcodeExtendedElements['residenceStreetAddress2'],
+      residenceFullAddress = nativeBarcodeExtendedElements['residenceFullAddress'],
+      residenceJurisdictionCode = nativeBarcodeExtendedElements['residenceJurisdictionCode'],
+      residencePostalCode = nativeBarcodeExtendedElements['residencePostalCode'],
+      residenceStreetAddress = nativeBarcodeExtendedElements['residenceStreetAddress'],
+      residenceStreetAddress2 = nativeBarcodeExtendedElements['residenceStreetAddress2'],
       securityVersion = nativeBarcodeExtendedElements['securityVersion'],
       sex = nativeBarcodeExtendedElements['sex'],
-      socialSecurityNumber =
-          nativeBarcodeExtendedElements['socialSecurityNumber'],
-      standardEndorsementCode =
-          nativeBarcodeExtendedElements['standardEndorsementCode'],
-      standardRestrictionCode =
-          nativeBarcodeExtendedElements['standardRestrictionCode'],
-      standardVehicleClassification =
-          nativeBarcodeExtendedElements['standardVehicleClassification'],
-      standardVersionNumber =
-          nativeBarcodeExtendedElements['standardVersionNumber'],
+      socialSecurityNumber = nativeBarcodeExtendedElements['socialSecurityNumber'],
+      standardEndorsementCode = nativeBarcodeExtendedElements['standardEndorsementCode'],
+      standardRestrictionCode = nativeBarcodeExtendedElements['standardRestrictionCode'],
+      standardVehicleClassification = nativeBarcodeExtendedElements['standardVehicleClassification'],
+      standardVersionNumber = nativeBarcodeExtendedElements['standardVersionNumber'],
       under18 = nativeBarcodeExtendedElements['under18'],
       under19 = nativeBarcodeExtendedElements['under19'],
       under21 = nativeBarcodeExtendedElements['under21'],
@@ -3985,22 +3823,12 @@ class DetailedCroppedImageResult {
   Rectangle? location;
 
   /// Represents the result of the image crop transformation with additional details.
-  DetailedCroppedImageResult(
-    Map<String, dynamic> nativeDetailedCroppedImageResult,
-  ) {
+  DetailedCroppedImageResult(Map<String, dynamic> nativeDetailedCroppedImageResult) {
     image = nativeDetailedCroppedImageResult["image"];
-    side = enumFromValue(
-      ScanningSide.values,
-      nativeDetailedCroppedImageResult["side"],
-    );
-    location =
-        nativeDetailedCroppedImageResult['location'] != null
-            ? Rectangle(
-              Map<String, dynamic>.from(
-                nativeDetailedCroppedImageResult['location'],
-              ),
-            )
-            : null;
+    side = enumFromValue(ScanningSide.values, nativeDetailedCroppedImageResult["side"]);
+    location = nativeDetailedCroppedImageResult['location'] != null
+        ? Rectangle(Map<String, dynamic>.from(nativeDetailedCroppedImageResult['location']))
+        : null;
   }
 }
 

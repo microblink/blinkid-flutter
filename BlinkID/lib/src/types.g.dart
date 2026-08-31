@@ -159,8 +159,12 @@ ClassFilter _$ClassFilterFromJson(Map<String, dynamic> json) => ClassFilter()
 
 Map<String, dynamic> _$ClassFilterToJson(ClassFilter instance) =>
     <String, dynamic>{
-      'includeDocuments': instance.includeDocuments,
-      'excludeDocuments': instance.excludeDocuments,
+      'includeDocuments': instance.includeDocuments
+          ?.map((e) => e.toJson())
+          .toList(),
+      'excludeDocuments': instance.excludeDocuments
+          ?.map((e) => e.toJson())
+          .toList(),
     };
 
 RedactionSettings _$RedactionSettingsFromJson(Map<String, dynamic> json) =>
@@ -189,10 +193,11 @@ Map<String, dynamic> _$RedactionSettingsToJson(
 ) => <String, dynamic>{
   'mode': _$RedactionModeEnumMap[instance.mode]!,
   'fields': instance.fields.map((e) => _$FieldTypeEnumMap[e]!).toList(),
-  'documentNumberRedactionSettings': instance.documentNumberRedactionSettings,
+  'documentNumberRedactionSettings': instance.documentNumberRedactionSettings
+      ?.toJson(),
   'redactMrzResult': instance.redactMrzResult,
   'redactBarcodeResult': instance.redactBarcodeResult,
-  'documentFilter': instance.documentFilter,
+  'documentFilter': instance.documentFilter?.map((e) => e.toJson()).toList(),
 };
 
 const _$FieldTypeEnumMap = {

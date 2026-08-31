@@ -33,3 +33,6 @@ Package.resolved
 .flutter-plugins
 .flutter-plugins-dependencies
 build/
+
+# License keys — use .env.example as template
+example/.env

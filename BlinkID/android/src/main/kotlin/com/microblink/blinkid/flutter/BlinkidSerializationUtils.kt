@@ -1,18 +1,25 @@
 package com.microblink.blinkid.flutter
 
 import android.graphics.Bitmap
+import android.util.Base64
 import com.microblink.blinkid.core.result.AddressDetailedInfo
 import com.microblink.blinkid.core.result.AlphabetType
 import com.microblink.blinkid.core.result.DataMatchFieldState
 import com.microblink.blinkid.core.result.DataMatchFieldType
 import com.microblink.blinkid.core.result.DataMatchResult
 import com.microblink.blinkid.core.result.DataMatchState
+import com.microblink.blinkid.core.result.DateResult
 import com.microblink.blinkid.core.result.DependentInfo
+import com.microblink.blinkid.core.result.DetailedCroppedImageResult
 import com.microblink.blinkid.core.result.DriverLicenseDetailedInfo
+import com.microblink.blinkid.core.result.ParentInfo
+import com.microblink.blinkid.core.result.Rectangle
+import com.microblink.blinkid.core.result.ScanningSide
 import com.microblink.blinkid.core.result.SingleSideScanningResult
 import com.microblink.blinkid.core.result.StringResult
 import com.microblink.blinkid.core.result.VehicleClassInfo
 import com.microblink.blinkid.core.result.barcode.BarcodeData
+import com.microblink.blinkid.core.result.barcode.BarcodeElement
 import com.microblink.blinkid.core.result.barcode.BarcodeResult
 import com.microblink.blinkid.core.result.barcode.BarcodeType
 import com.microblink.blinkid.core.result.classinfo.DocumentClassInfo
@@ -21,13 +28,6 @@ import com.microblink.blinkid.core.result.viz.VizResult
 import com.microblink.blinkid.core.session.BlinkIdScanningResult
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import android.util.Base64
-import com.microblink.blinkid.core.result.ParentInfo
-import com.microblink.blinkid.core.result.barcode.BarcodeElement
-import com.microblink.blinkid.core.result.DateResult
-import com.microblink.blinkid.core.result.DetailedCroppedImageResult
-import com.microblink.blinkid.core.result.Rectangle
-import com.microblink.blinkid.core.result.ScanningSide
 import kotlin.collections.set
 
 object BlinkIdSerializationUtils {
@@ -216,7 +216,7 @@ object BlinkIdSerializationUtils {
             scanningResultDict["subResults"] = it.map { subResult -> serializeSubResult(subResult) }
         }
         scanningResult?.parentsInfo?.let {
-            scanningResultDict["parentsInfo"] = it.map { parentInfo -> serializeParentInfo(parentInfo)}
+            scanningResultDict["parentsInfo"] = it.map { parentInfo -> serializeParentInfo(parentInfo) }
         }
         scanningResult?.husbandName?.let {
             scanningResultDict["husbandName"] = serializeStringResult(it)
@@ -275,14 +275,11 @@ object BlinkIdSerializationUtils {
         dateResult?.year?.let {
             simpleDateResultDict["year"] = it
         }
-        return simpleDateResultDict;
+        return simpleDateResultDict
     }
 
     private fun serializeDocumentClassInfo(documentClassInfo: DocumentClassInfo): Map<String, Any?> {
         val documentClassInfoDict: MutableMap<String, Any?> = mutableMapOf()
-        // TODO: Align country/region/documentType strings with iOS (rawValue). Android uses
-        // enum.name with only the first character lowercased; values usually match but are not
-        // guaranteed identical for every enum. Prefer shared explicit string mappers on both platforms.
         documentClassInfo.country?.name?.let {
             documentClassInfoDict["country"] = it.replaceFirstChar { char -> char.lowercase() }
         }
@@ -304,22 +301,20 @@ object BlinkIdSerializationUtils {
         return documentClassInfoDict
     }
 
-    private fun serializeDataMatchResult(dataMatchResult: DataMatchResult): Map<String, Any?> {
-        return mapOf(
+    private fun serializeDataMatchResult(dataMatchResult: DataMatchResult): Map<String, Any?> =
+        mapOf(
             "states" to dataMatchResult.statePerField.map { serializeDataMatchField(it) },
-            "overallState" to serializeDataMatchState(dataMatchResult.overallState)
+            "overallState" to serializeDataMatchState(dataMatchResult.overallState),
         )
-    }
 
-    private fun serializeDataMatchField(dataMatchField: DataMatchFieldState): Map<String, Any> {
-        return mapOf(
+    private fun serializeDataMatchField(dataMatchField: DataMatchFieldState): Map<String, Any> =
+        mapOf(
             "field" to serializeDataMatchFieldType(dataMatchField.fieldType),
-            "state" to serializeDataMatchState(dataMatchField.state)
+            "state" to serializeDataMatchState(dataMatchField.state),
         )
-    }
 
-    private fun serializeDataMatchFieldType(fieldType: DataMatchFieldType): String {
-        return when (fieldType) {
+    private fun serializeDataMatchFieldType(fieldType: DataMatchFieldType): String =
+        when (fieldType) {
             DataMatchFieldType.DateOfBirth -> "dateOfBirth"
             DataMatchFieldType.DateOfExpiry -> "dateOfExpiry"
             DataMatchFieldType.DocumentNumber -> "documentNumber"
@@ -327,15 +322,13 @@ object BlinkIdSerializationUtils {
             DataMatchFieldType.DocumentOptionalAdditionalNumber -> "documentOptionalAdditionalNumber"
             DataMatchFieldType.PersonalIdNumber -> "personalIdNumber"
         }
-    }
 
-    private fun serializeDataMatchState(state: DataMatchState): String {
-        return when (state) {
+    private fun serializeDataMatchState(state: DataMatchState): String =
+        when (state) {
             DataMatchState.NotPerformed -> "notPerformed"
             DataMatchState.Failed -> "failed"
             DataMatchState.Success -> "success"
         }
-    }
 
     private fun serializeStringResult(stringResult: StringResult): Map<String, Any?> {
         val stringResultDict: MutableMap<String, Any?> = mutableMapOf()
@@ -361,8 +354,6 @@ object BlinkIdSerializationUtils {
         }
 
         val sideDict: MutableMap<String, Any?> = mutableMapOf()
-        // TODO: Serialize ScanningSide as "first"/"second" strings (not ordinals).
-        // See blinkid-react-native BlinkIdSerializationUtilities.kt.
         stringResult.side(AlphabetType.Latin)?.let {
             sideDict["latin"] = it.ordinal
         }
@@ -380,37 +371,35 @@ object BlinkIdSerializationUtils {
         return stringResultDict
     }
 
-    private fun serializeLocation(rectangle: Rectangle): Map<String, Any?> {
-        return mapOf(
+    private fun serializeLocation(rectangle: Rectangle): Map<String, Any?> =
+        mapOf(
             "x" to rectangle.x.toDouble(),
             "y" to rectangle.y.toDouble(),
             "width" to rectangle.width.toDouble(),
-            "height" to rectangle.height.toDouble()
+            "height" to rectangle.height.toDouble(),
         )
-    }
 
-    private fun <T> serializeDriverLicenseDetailedInfo(driverLicenseDetailedInfo: DriverLicenseDetailedInfo<T>?): Map<String, Any?> {
-        return mapOf(
+    private fun <T> serializeDriverLicenseDetailedInfo(driverLicenseDetailedInfo: DriverLicenseDetailedInfo<T>?): Map<String, Any?> =
+        mapOf(
             "conditions" to serializeStringType(driverLicenseDetailedInfo?.conditions),
             "endorsements" to serializeStringType(driverLicenseDetailedInfo?.endorsements),
             "restrictions" to serializeStringType(driverLicenseDetailedInfo?.restrictions),
             "vehicleClass" to serializeStringType(driverLicenseDetailedInfo?.vehicleClass),
-            "vehicleClassesInfo" to driverLicenseDetailedInfo?.vehicleClassesInfo?.map {
-                serializeVehicleClassInfo(
-                    it
-                )
-            }
+            "vehicleClassesInfo" to
+                driverLicenseDetailedInfo?.vehicleClassesInfo?.map {
+                    serializeVehicleClassInfo(
+                        it,
+                    )
+                },
         )
-    }
 
-    private fun <T> serializeVehicleClassInfo(vehicleClassInfo: VehicleClassInfo<T>): Map<String, Any?> {
-        return mapOf(
+    private fun <T> serializeVehicleClassInfo(vehicleClassInfo: VehicleClassInfo<T>): Map<String, Any?> =
+        mapOf(
             "effectiveDate" to serializeDateResult(vehicleClassInfo.effectiveDate),
             "expiryDate" to serializeDateResult(vehicleClassInfo.expiryDate),
             "licenceType" to serializeStringType(vehicleClassInfo.licenceType),
-            "vehicleClass" to serializeStringType(vehicleClassInfo.vehicleClass)
+            "vehicleClass" to serializeStringType(vehicleClassInfo.vehicleClass),
         )
-    }
 
     private fun serializeDependentInfo(dependentInfo: DependentInfo): Map<String, Any?> {
         val dependentInfoDict: MutableMap<String, Any?> = mutableMapOf()
@@ -430,8 +419,8 @@ object BlinkIdSerializationUtils {
         return dependentInfoDict
     }
 
-    private fun serializeSubResult(subResult: SingleSideScanningResult): Map<String, Any?> {
-        return mapOf(
+    private fun serializeSubResult(subResult: SingleSideScanningResult): Map<String, Any?> =
+        mapOf(
             "viz" to serializeVizResult(subResult.viz),
             "mrz" to serializeMrzResult(subResult.mrz),
             "barcode" to serializeBarcodeResult(subResult.barcode),
@@ -441,10 +430,9 @@ object BlinkIdSerializationUtils {
             "faceImage" to serializeDetailedCroppedImageResult(subResult.faceImage),
             "signatureImage" to serializeDetailedCroppedImageResult(subResult.signatureImage),
         )
-    }
 
-    private fun serializeBarcodeResult(barcodeResult: BarcodeResult?): Map<String, Any?> {
-        return mapOf(
+    private fun serializeBarcodeResult(barcodeResult: BarcodeResult?): Map<String, Any?> =
+        mapOf(
             "barcodeData" to serializeBarcodeData(barcodeResult?.barcodeData),
             "parsed" to barcodeResult?.parsed,
             "firstName" to barcodeResult?.firstName,
@@ -473,30 +461,25 @@ object BlinkIdSerializationUtils {
             "driverLicenseDetailedInfo" to serializeDriverLicenseDetailedInfo(barcodeResult?.driverLicenseDetailedInfo),
             "extendedElements" to serializeBarcodeExtendedElements(barcodeResult?.extendedElements?.barcodeElements),
         )
-    }
 
-    private fun serializeAddressDetailedInfo(addressDetailedInfo: AddressDetailedInfo?): Map<String, Any?> {
-        return mapOf(
+    private fun serializeAddressDetailedInfo(addressDetailedInfo: AddressDetailedInfo?): Map<String, Any?> =
+        mapOf(
             "city" to addressDetailedInfo?.city,
             "postalCode" to addressDetailedInfo?.postalCode,
             "jurisdiction" to addressDetailedInfo?.jurisdiction,
-            "street" to addressDetailedInfo?.street
+            "street" to addressDetailedInfo?.street,
         )
-    }
 
-    private fun serializeBarcodeData(barcodeData: BarcodeData?): Map<String, Any?> {
-        return mapOf(
+    private fun serializeBarcodeData(barcodeData: BarcodeData?): Map<String, Any?> =
+        mapOf(
             "barcodeType" to serializeBarcodeType(barcodeData?.barcodeType),
-            // TODO: Encode rawData as Base64 (Base64.NO_WRAP), not byteArray.toString().
-            // iOS bridge uses base64EncodedString(); see blinkid-react-native encodeBase64Bytes().
             "rawData" to barcodeData?.rawData.toString(),
             "stringData" to barcodeData?.stringData,
-            "uncertain" to barcodeData?.uncertain
+            "uncertain" to barcodeData?.uncertain,
         )
-    }
 
-    private fun serializeBarcodeType(barcodeType: BarcodeType?): String {
-        return when (barcodeType) {
+    private fun serializeBarcodeType(barcodeType: BarcodeType?): String =
+        when (barcodeType) {
             BarcodeType.None -> "none"
             BarcodeType.QRCode -> "qrCode"
             BarcodeType.DataMatrix -> "dataMatrix"
@@ -511,10 +494,9 @@ object BlinkIdSerializationUtils {
             BarcodeType.PDF417 -> "pdf417"
             null -> "none"
         }
-    }
 
-    private fun serializeMrzResult(mrzResult: MrzResult?): Map<String, Any?> {
-        return mapOf(
+    private fun serializeMrzResult(mrzResult: MrzResult?): Map<String, Any?> =
+        mapOf(
             "rawMRZString" to mrzResult?.rawMRZString,
             "documentCode" to mrzResult?.documentCode,
             "issuer" to mrzResult?.issuer,
@@ -530,7 +512,6 @@ object BlinkIdSerializationUtils {
             "verified" to mrzResult?.verified,
             "dateOfBirth" to serializeDateResult(mrzResult?.dateOfBirth),
             "dateOfExpiry" to serializeDateResult(mrzResult?.dateOfExpiry),
-            // TODO: Serialize as MRZ document type string (e.g. "passport"), not ordinal.
             "documentType" to mrzResult?.documentType?.ordinal,
             "sanitizedOpt1" to mrzResult?.sanitizedOpt1,
             "sanitizedOpt2" to mrzResult?.sanitizedOpt2,
@@ -539,7 +520,6 @@ object BlinkIdSerializationUtils {
             "sanitizedDocumentCode" to mrzResult?.sanitizedDocumentCode,
             "sanitizedDocumentNumber" to mrzResult?.sanitizedDocumentNumber,
         )
-    }
 
     private fun serializeVizResult(vizResult: VizResult?): Map<String, Any?> {
         val vizResultDict: MutableMap<String, Any> = mutableMapOf()
@@ -745,7 +725,6 @@ object BlinkIdSerializationUtils {
             detailedCroppedImageResultDict["location"] = serializeLocation(it)
         }
         detailedCroppedImageResult?.side?.let {
-            // TODO: Serialize as "first"/"second" string, not ordinal.
             detailedCroppedImageResultDict["side"] = it.ordinal
         }
         return detailedCroppedImageResultDict
@@ -773,25 +752,22 @@ object BlinkIdSerializationUtils {
         return parentInfoDict
     }
 
-    private fun serializeStringType(value: Any?): Any? {
-        return when (value) {
+    private fun serializeStringType(value: Any?): Any? =
+        when (value) {
             is StringResult -> serializeStringResult(value)
             is String -> value
             else -> null
         }
-    }
 
-    private fun encodeBase64Image(image: Bitmap?): String? {
-        return image?.let { bmp ->
+    private fun encodeBase64Image(image: Bitmap?): String? =
+        image?.let { bmp ->
             val outputStream = ByteArrayOutputStream()
             outputStream.use { stream ->
                 bmp.compress(Bitmap.CompressFormat.JPEG, 95, stream)
                 Base64.encodeToString(
                     stream.toByteArray(),
-                    Base64.NO_WRAP
+                    Base64.NO_WRAP,
                 )
             }
         }
-    }
 }
-
