@@ -3,6 +3,103 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'blinkid_settings.g.dart';
 
+/// Network timeouts used when the SDK downloads on-device processing resources.
+///
+/// Values are in milliseconds. Omit [ResourcesConfig.requestTimeout] or
+/// [OtaResourcesConfig.requestTimeout] to keep the native SDK default (30 seconds
+/// per timeout on current BlinkID native SDKs).
+@JsonSerializable(includeIfNull: false)
+class RequestTimeout {
+  /// Timeout for establishing the TCP connection to the resource host.
+  final int? connectionTimeoutMilliseconds;
+
+  /// Timeout for individual write IO operations.
+  final int? writeTimeoutMilliseconds;
+
+  /// Timeout applied to the TCP socket and read IO operations.
+  final int? readTimeoutMilliseconds;
+
+  const RequestTimeout({
+    this.connectionTimeoutMilliseconds,
+    this.writeTimeoutMilliseconds,
+    this.readTimeoutMilliseconds,
+  });
+
+  /// Applies the same duration to connection, write, and read timeouts.
+  factory RequestTimeout.all(int timeoutMilliseconds) => RequestTimeout(
+        connectionTimeoutMilliseconds: timeoutMilliseconds,
+        writeTimeoutMilliseconds: timeoutMilliseconds,
+        readTimeoutMilliseconds: timeoutMilliseconds,
+      );
+
+  factory RequestTimeout.fromJson(Map<String, dynamic> json) =>
+      _$RequestTimeoutFromJson(json);
+  Map<String, dynamic> toJson() => _$RequestTimeoutToJson(this);
+}
+
+@JsonSerializable()
+class ResourcesConfig {
+  /// Default: `true`.
+  bool? download;
+
+  /// Default host: `https://models.cdn.microblink.com/resources`
+  /// Do not use the OTA host here.
+  String? serviceUrl;
+
+  /// Android default: `microblink/blinkid`. iOS default: `MLModels`.
+  String? localFolder;
+
+  /// Network timeouts for resource downloads. Values are in milliseconds.
+  @JsonKey(includeIfNull: false)
+  RequestTimeout? requestTimeout;
+
+  /// [iOS] Bundle id for prebundled resources when [download] is false.
+  String? bundleIdentifier;
+
+  ResourcesConfig({
+    this.download,
+    this.serviceUrl,
+    this.localFolder,
+    this.requestTimeout,
+    this.bundleIdentifier,
+  });
+  factory ResourcesConfig.fromJson(Map<String, dynamic> json) =>
+      _$ResourcesConfigFromJson(json);
+  Map<String, dynamic> toJson() => _$ResourcesConfigToJson(this);
+}
+@JsonSerializable()
+class OtaResourcesConfig {
+  /// Default: `true`. Suppresses update checks only — first-run fetch still happens if missing.
+  bool? checkForUpdates;
+
+  /// Default: `false`. If `true` and updates enabled, init can fail on download errors.
+  bool? strict;
+
+  /// Default: `https://blinkid-ota.microblink.com`
+  String? serviceUrl;
+
+  /// Android default: `microblink/blinkid/ota`. iOS default: `OTAMLModels`.
+  String? localFolder;
+
+  /// Network timeouts for OTA resource downloads. Values are in milliseconds.
+  @JsonKey(includeIfNull: false)
+  RequestTimeout? requestTimeout;
+
+  /// [iOS] Bundle id for prebundled OTA resources.
+  String? bundleIdentifier;
+  OtaResourcesConfig({
+    this.checkForUpdates,
+    this.strict,
+    this.serviceUrl,
+    this.localFolder,
+    this.requestTimeout,
+    this.bundleIdentifier,
+  });
+  factory OtaResourcesConfig.fromJson(Map<String, dynamic> json) =>
+      _$OtaResourcesConfigFromJson(json);
+  Map<String, dynamic> toJson() => _$OtaResourcesConfigToJson(this);
+}
+
 /// Settings for the initialization of the BlinkID SDK.
 @JsonSerializable()
 class BlinkIdSdkSettings {
@@ -12,26 +109,9 @@ class BlinkIdSdkSettings {
   /// Optional licensee string if the provided license key is not tied to the single application ID
   String? licensee;
 
-  /// Whether resources required for on-device image processing should be downloaded and cached
-  /// on first initialization of the SDK.
-  /// If set to false, you need to package all the required
-  /// resources in your application's assets.
-  bool downloadResources;
+  ResourcesConfig? resourcesConfig;
 
-  /// If resources are to be downloaded, the following is the URL where the resources are hosted.
-  /// URL: `"https://models.cdn.microblink.com/resources"`
-  String? resourceDownloadUrl;
-
-  /// Local folder name where resources will be downloaded and cached.
-  /// If resources are being downloaded, this defines the name of the folder within your
-  /// application's cache folder where resources will be cached.
-  String? resourceLocalFolder;
-
-  /// [iOS-specific] If resources downloading is disabled for iOS, this defines the bundle identifier of your iOS app where the resources reside.
-  String? bundleIdentifier;
-
-  /// Timeout settings for resource downloads.
-  int? resourceRequestTimeout;  // TODO bug, should be set to RequestTimeout not int
+  OtaResourcesConfig? otaResourcesConfig;
 
   /// Set a custom HTTPS URL to be used as a proxy for Ping and license checks.
   /// The proxy URL will be applied only if the license has the appropriate rights.
@@ -45,12 +125,9 @@ class BlinkIdSdkSettings {
   /// Settings for the initialization of the BlinkID SDK.
   BlinkIdSdkSettings({
     required this.licenseKey,
-    this.downloadResources = true,
     this.licensee,
-    this.resourceDownloadUrl,
-    this.resourceLocalFolder,
-    this.bundleIdentifier,
-    this.resourceRequestTimeout,
+    this.resourcesConfig,
+    this.otaResourcesConfig,
     this.microblinkProxyUrl,
   });
 

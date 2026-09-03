@@ -82,6 +82,11 @@ class BarcodeModuleSettings {
   /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
   bool dataMatrixScanningEnabled;
 
+  /// Enables the scanning and processing of Aztec barcodes.
+  ///
+  /// This setting can be enabled only if `documentCaptureEnabled` is disabled.
+  bool aztecScanningEnabled;
+
   BarcodeModuleSettings({
     this.presenceMandatory = false,
     this.barcodeImageReturnEnabled = false,
@@ -95,6 +100,7 @@ class BarcodeModuleSettings {
     this.ean13ScanningEnabled = false,
     this.itfScanningEnabled = false,
     this.dataMatrixScanningEnabled = false,
+    this.aztecScanningEnabled = false,
   });
 
   factory BarcodeModuleSettings.fromJson(Map<String, dynamic> json) =>
@@ -110,11 +116,10 @@ class BarcodeModuleSettings {
 /// and lighting checks).
 @JsonSerializable()
 class DocumentCaptureModuleSettings {
-  /// Indicates whether the input image is already cropped and perspective-corrected.
-  ///
-  /// Requires the input image to consist solely of the cropped document image with perspective correction applied.
-  /// This only applies to images from the DirectAPI method of scanning — with images from the default scanning, the setting will be ignored.
-  bool inputImageCropped;
+
+  /// Default: [InputImageCropType.notCropped].
+  /// [InputImageCropType.cropped] / [InputImageCropType.unknown] → DirectAPI only.
+  InputImageCropType cropType;
 
   /// Enables the scanning and processing of unsupported document types.
   ///
@@ -172,7 +177,7 @@ class DocumentCaptureModuleSettings {
   ///
   /// Default value is `0.02`.
   /// The setting is applicable only when using images from `Video` source.
-  /// The setting is ignored if `inputImageCropped == true`.
+  /// The setting is ignored if [cropType] is [InputImageCropType.cropped].
   ///
   /// Allowed minimal value is `0.0` and maximum value is `1.0`.
   double? inputImageMargin;
@@ -238,11 +243,17 @@ class DocumentCaptureModuleSettings {
   ///
   /// If `true`, occluded images will be excluded from further processing.
   ///
-  /// This setting is applicable only if `inputImageCropped == false`.
+  /// Not applicable when [cropType] is [InputImageCropType.cropped]
+  /// (setting it to `true` in that case fails settings validation).
+  /// For [InputImageCropType.notCropped] / [InputImageCropType.unknown],
+  /// the default is to reject hand-occluded images.
   bool imageWithHandOcclusionRejected;
 
+  /// Default: [InputImageSelectionStrategy.balanced]. Video / camera oriented.
+  InputImageSelectionStrategy inputImageSelectionStrategy;
+
   DocumentCaptureModuleSettings({
-    this.inputImageCropped = false,
+    this.cropType = InputImageCropType.notCropped,
     this.unsupportedDocumentsAllowed = false,
     this.secondSideWithNoExtractableDataSkipped = true,
     this.passportDataPageScanOnly = true,
@@ -260,6 +271,7 @@ class DocumentCaptureModuleSettings {
     this.tiltSensitivityLevel = SensitivityLevel.mid,
     this.imageWithPoorLightingRejected = true,
     this.imageWithHandOcclusionRejected = true,
+    this.inputImageSelectionStrategy = InputImageSelectionStrategy.balanced,
   });
 
   factory DocumentCaptureModuleSettings.fromJson(Map<String, dynamic> json) =>
@@ -371,8 +383,8 @@ class ClassFilter {
   ///  ```
   ///   final classFilter = ClassFilter();
   ///    classFilter.includeDocuments = [
-  ///      DocumentFilter.country(Country.usa),
-  ///      DocumentFilter.countryType(Country.croatia, DocumentType.id),
+  ///      DocumentFilter(country: CountryID.usa),
+  ///      DocumentFilter(country: CountryID.croatia, documentType: DocumentTypeID.id),
   ///    ];
   ///
   ///    await blinkIdPlugin.performScan(sdkSettings, sessionSettings classFilter)
@@ -397,8 +409,8 @@ class ClassFilter {
   ///  ```
   ///   final classFilter = ClassFilter();
   ///    classFilter.excludeDocuments = [
-  ///      DocumentFilter.country(Country.usa),
-  ///      DocumentFilter.countryType(Country.croatia, DocumentType.id),
+  ///      DocumentFilter(country: CountryID.usa),
+  ///      DocumentFilter(country: CountryID.croatia, documentType: DocumentTypeID.id),
   ///    ];
   ///
   ///    await blinkIdPlugin.performScan(sdkSettings, sessionSettings classFilter)
@@ -531,15 +543,15 @@ class DetailedFieldType {
 class DocumentFilter {
   /// If set, only specified country will pass the filter criteria.
   /// Otherwise, issuing country will not be taken into account.
-  Country? country;
+  CountryID? country;
 
   /// If set, only specified country will pass the filter criteria.
   /// Otherwise, issuing region will not be taken into account.
-  Region? region;
+  RegionID? region;
 
   /// If set, only specified type will pass the filter criteria. Otherwise, issuing type will not be taken into
   /// account.
-  DocumentType? documentType;
+  DocumentTypeID? documentType;
 
   /// Represents the document filter.
   /// Used with other classes like the [ClassFilter], [DocumentRules] and the [DocumentAnonymizationSettings].
@@ -547,11 +559,15 @@ class DocumentFilter {
   /// All parameters are optional, and do not need to be added.
   /// The filter can be set to be more generic (for example, to only accept document from USA):
   /// ```
-  /// DocumentFilter(Country.usa);
+  /// DocumentFilter(country: CountryID.usa);
   /// ```
   /// or, it can be set to be more specific (for example, to specifically accept USA drivers licenses from California):
   /// ```
-  /// DocumentFilter(Country.usa, Region.california, DocumentType.dl);
+  /// DocumentFilter(
+  ///   country: CountryID.usa,
+  ///   region: RegionID.california,
+  ///   documentType: DocumentTypeID.dl,
+  /// );
   /// ```
   DocumentFilter({this.country, this.region, this.documentType});
   factory DocumentFilter.fromJson(Map<String, dynamic> json) =>
@@ -629,6 +645,36 @@ enum SensitivityLevel {
   high,
 }
 
+/// How the input image is treated for document localization / crop.
+///
+/// - [notCropped]: raw image; runs detection + perspective correction.
+/// - [unknown]: try cropped processing first, fall back to detection.
+/// - [cropped]: image must already be cropped + perspective-corrected.
+///
+/// [cropped] and [unknown] are DirectAPI / Photo only; camera / Video requires [notCropped].
+enum InputImageCropType {
+  @JsonValue("not-cropped")
+  notCropped,
+  @JsonValue("unknown")
+  unknown,
+  @JsonValue("cropped")
+  cropped,
+}
+
+/// How the best frame is chosen from a pool of stable video frames.
+///
+/// Applicable to Video / camera scanning only.
+enum InputImageSelectionStrategy {
+  @JsonValue("single-image")
+  singleImage,
+  @JsonValue("optimize-for-speed")
+  optimizeForSpeed,
+  @JsonValue("balanced")
+  balanced,
+  @JsonValue("optimize-for-quality")
+  optimizeForQuality,
+}
+
 /// Represents level of anonymization performed on the scanning result.
 enum RedactionMode {
   /// Anonymization will not be performed.
@@ -668,7 +714,7 @@ enum AlphabetType {
 }
 
 /// Document country.
-enum Country {
+enum CountryID {
   @JsonValue("none")
   none,
   @JsonValue("albania")
@@ -1186,7 +1232,7 @@ enum Country {
 }
 
 /// Document region.
-enum Region {
+enum RegionID {
   @JsonValue("none")
   none,
   @JsonValue("alabama")
@@ -1490,7 +1536,7 @@ enum Region {
 }
 
 /// Document type.
-enum DocumentType {
+enum DocumentTypeID {
   @JsonValue("none")
   none,
   @JsonValue("consularId")
@@ -1823,6 +1869,10 @@ enum FieldType {
   husbandName,
   @JsonValue("cardAccessNumber")
   cardAccessNumber,
+  @JsonValue("parentFullName")
+  parentFullName,
+  @JsonValue("ethnicity")
+  ethnicity,
 }
 
 /// An enum indicating preffered camera position for document capturing.
@@ -1836,6 +1886,45 @@ enum PreferredCamera {
   /// Use the front-facing camera
   @JsonValue("front")
   front,
+}
+
+/// Document country classification from [DocumentClassInfo].
+///
+/// When known at SDK build time, both [id] and [rawValue] are set.
+/// For OTA / unknown documents, [id] may be omitted while [rawValue] remains.
+/// A missing country means [DocumentClassInfo.country] is null (native `"NONE"`).
+class Country {
+  CountryID? id;
+  String rawValue;
+  Country({this.id, required this.rawValue});
+  factory Country.fromNativeMap(Map<String, dynamic> map) {
+    return Country(
+      id: enumFromValue(CountryID.values.toList(), map['id']),
+      rawValue: map['rawValue'] as String? ?? '',
+    );
+  }
+}
+class Region {
+  RegionID? id;
+  String rawValue;
+  Region({this.id, required this.rawValue});
+  factory Region.fromNativeMap(Map<String, dynamic> map) {
+    return Region(
+      id: enumFromValue(RegionID.values.toList(), map['id']),
+      rawValue: map['rawValue'] as String? ?? '',
+    );
+  }
+}
+class DocumentType {
+  DocumentTypeID? id;
+  String rawValue;
+  DocumentType({this.id, required this.rawValue});
+  factory DocumentType.fromNativeMap(Map<String, dynamic> map) {
+    return DocumentType(
+      id: enumFromValue(DocumentTypeID.values.toList(), map['id']),
+      rawValue: map['rawValue'] as String? ?? '',
+    );
+  }
 }
 
 /// Represents the document class information.
@@ -1873,15 +1962,20 @@ class DocumentClassInfo {
 
   /// Represents the document class information.
   DocumentClassInfo(Map<String, dynamic> nativeClassInfo) {
-    country = enumFromValue(
-      Country.values.toList(),
-      nativeClassInfo['country'],
-    );
-    region = enumFromValue(Region.values.toList(), nativeClassInfo['region']);
-    documentType = enumFromValue(
-      DocumentType.values.toList(),
-      nativeClassInfo['documentType'],
-    );
+    final countryMap = nativeClassInfo['country'];
+    if (countryMap is Map) {
+      country = Country.fromNativeMap(Map<String, dynamic>.from(countryMap));
+    }
+    final regionMap = nativeClassInfo['region'];
+    if (regionMap is Map) {
+      region = Region.fromNativeMap(Map<String, dynamic>.from(regionMap));
+    }
+    final documentTypeMap = nativeClassInfo['documentType'];
+    if (documentTypeMap is Map) {
+      documentType = DocumentType.fromNativeMap(
+        Map<String, dynamic>.from(documentTypeMap),
+      );
+    }
     empty = nativeClassInfo['empty'];
     countryName = nativeClassInfo['countryName'];
     isoNumericCountryCode = nativeClassInfo['isoNumericCountryCode'];
@@ -2441,6 +2535,9 @@ class VizResult {
   /// The race of the document owner.
   StringResult? race;
 
+  /// The ethnicity of the document owner.
+  StringResult? ethnicity;
+
   /// The religion of the document owner.
   StringResult? religion;
 
@@ -2614,6 +2711,7 @@ class VizResult {
     placeOfBirth = createStringResult(nativeVizResult, 'placeOfBirth');
     nationality = createStringResult(nativeVizResult, 'nationality');
     race = createStringResult(nativeVizResult, 'race');
+    ethnicity = createStringResult(nativeVizResult, 'ethnicity');
     religion = createStringResult(nativeVizResult, 'religion');
     profession = createStringResult(nativeVizResult, 'profession');
     maritalStatus = createStringResult(nativeVizResult, 'maritalStatus');
@@ -4021,9 +4119,13 @@ class ParentInfo {
   /// The last name of one of the document owner's parents.
   StringResult? lastName;
 
+  /// The full name of one of the document owner's parents.
+  StringResult? fullName;
+
   ParentInfo(Map<String, dynamic> nativeParentInfo) {
     firstName = createStringResult(nativeParentInfo, 'firstName');
     lastName = createStringResult(nativeParentInfo, 'lastName');
+    fullName = createStringResult(nativeParentInfo, 'fullName');
   }
 }
 

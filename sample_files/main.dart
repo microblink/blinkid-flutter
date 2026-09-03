@@ -48,10 +48,15 @@ class _MyAppState extends State<MyApp> {
 
   BlinkIdSdkSettings _buildSdkSettings() {
     final sdkSettings = BlinkIdSdkSettings(
-            licenseKey: sdkLicenseKey,
-            microblinkProxyUrl: _microblinkProxyUrl,
-            downloadResources: true
-          );
+      licenseKey: sdkLicenseKey,
+      microblinkProxyUrl: _microblinkProxyUrl,
+      resourcesConfig: ResourcesConfig(
+        download: true,
+        // Optional: override resource download timeouts (milliseconds).
+        // requestTimeout: RequestTimeout.all(30000),
+      ),
+      otaResourcesConfig: _modulesConfig.toOtaResourcesConfig(),
+    );
     return sdkSettings;
   }
 
@@ -61,6 +66,7 @@ class _MyAppState extends State<MyApp> {
   void _logScanConfiguration(String action) {
     final sessionSettings = _buildSessionSettings();
     final scanningSettings = sessionSettings.scanningSettings;
+    final otaResourcesConfig = _modulesConfig.toOtaResourcesConfig();
     debugPrint('[BlinkIdSample] $action');
     debugPrint('[BlinkIdSample] scanningMode: ${sessionSettings.scanningMode}');
     debugPrint(
@@ -82,6 +88,10 @@ class _MyAppState extends State<MyApp> {
     );
     debugPrint(
       '[BlinkIdSample] full sessionSettings JSON: ${jsonEncode(sessionSettings.toJson())}',
+    );
+    debugPrint(
+      '[BlinkIdSample] otaResourcesConfig: '
+      '${otaResourcesConfig != null ? jsonEncode(otaResourcesConfig.toJson()) : 'null'}',
     );
   }
 
@@ -259,6 +269,23 @@ class _MyAppState extends State<MyApp> {
           resetImages();
         });
       }
+    }
+  }
+
+  Future<void> refreshLicenseLease() async {
+    try {
+      await blinkIdPlugin.refreshLicenseLease();
+      setState(() {
+        resultString = "License lease refreshed";
+      });
+    } catch (error) {
+      setState(() {
+        if (error is PlatformException) {
+          resultString = "Error refreshing license lease: ${error.message}";
+        } else {
+          resultString = "Error refreshing license lease: $error";
+        }
+      });
     }
   }
 
@@ -479,6 +506,20 @@ class _MyAppState extends State<MyApp> {
                         });
                       },
                       child: Text("DirectAPI SingleSide"),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: Center(
+                      child: TextButton(
+                        onPressed: () => refreshLicenseLease(),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text("Refresh License Lease"),
+                      ),
                     ),
                   ),
                   Text(resultString),

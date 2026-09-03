@@ -1,6 +1,9 @@
 import 'package:blinkid_flutter/blinkid_flutter.dart';
 import 'sample_filter_options.dart';
 
+/// Default OTA service URL used by the native BlinkID SDK when omitted.
+const defaultOtaServiceUrl = 'https://blinkid-ota.microblink.com';
+
 /// Holds UI-driven scanning configuration for the BlinkID sample app.
 class ScanningModulesConfig {
   ScanningMode scanningMode = ScanningMode.automatic;
@@ -36,6 +39,10 @@ class ScanningModulesConfig {
     ScanningModulesConfig.defaultRedactionSettings(),
   ];
 
+  bool otaResourcesDownload = true;
+  bool otaResourcesStrict = false;
+  String otaResourcesServiceUrl = defaultOtaServiceUrl;
+
   /// SDK defaults from [BarcodeModuleSettings] constructor in `types.dart`.
   static BarcodeModuleSettings get defaultBarcodeModule =>
       BarcodeModuleSettings();
@@ -60,8 +67,8 @@ class ScanningModulesConfig {
       fields: [FieldType.firstName, FieldType.lastName],
       documentFilter: [
         DocumentFilter(
-          country: Country.croatia,
-          documentType: DocumentType.id,
+          country: CountryID.croatia,
+          documentType: DocumentTypeID.id,
         ),
       ],
     );
@@ -100,6 +107,20 @@ class ScanningModulesConfig {
       return null;
     }
     return RedactionSettingsResolver(redactionResolverEntries);
+  }
+
+  OtaResourcesConfig? toOtaResourcesConfig() {
+    if (!otaResourcesDownload) {
+      return null;
+    }
+
+    final serviceUrl = otaResourcesServiceUrl.trim();
+
+    return OtaResourcesConfig(
+      checkForUpdates: true,
+      strict: otaResourcesStrict,
+      serviceUrl: serviceUrl.isNotEmpty ? serviceUrl : null,
+    );
   }
 
   BlinkIdScanningSettings toScanningSettings() {
@@ -152,5 +173,8 @@ class ScanningModulesConfig {
     classFilterExclude = [];
     redactionResolverEnabled = false;
     redactionResolverEntries = [defaultRedactionSettings()];
+    otaResourcesDownload = true;
+    otaResourcesStrict = false;
+    otaResourcesServiceUrl = defaultOtaServiceUrl;
   }
 }

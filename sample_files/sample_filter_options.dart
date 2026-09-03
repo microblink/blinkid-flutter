@@ -1,34 +1,34 @@
 import 'package:blinkid_flutter/blinkid_flutter.dart';
 
 class UiDocumentFilter {
-  Country? country;
-  Region? region;
-  DocumentType? documentType;
+  CountryID? country;
+  RegionID? region;
+  DocumentTypeID? documentType;
 
   UiDocumentFilter({this.country, this.region, this.documentType});
 }
 
-const sampleCountries = <Country>[
-  Country.canada,
-  Country.usa,
-  Country.croatia,
-  Country.germany,
-  Country.uK,
-  Country.australia,
+const sampleCountries = <CountryID>[
+  CountryID.canada,
+  CountryID.usa,
+  CountryID.croatia,
+  CountryID.germany,
+  CountryID.uK,
+  CountryID.australia,
 ];
 
-const sampleUsaRegions = <Region>[
-  Region.california,
-  Region.texas,
-  Region.newYork,
-  Region.florida,
+const sampleUsaRegions = <RegionID>[
+  RegionID.california,
+  RegionID.texas,
+  RegionID.newYork,
+  RegionID.florida,
 ];
 
-const sampleDocumentTypes = <DocumentType>[
-  DocumentType.id,
-  DocumentType.dl,
-  DocumentType.passport,
-  DocumentType.visa,
+const sampleDocumentTypes = <DocumentTypeID>[
+  DocumentTypeID.id,
+  DocumentTypeID.dl,
+  DocumentTypeID.passport,
+  DocumentTypeID.visa,
 ];
 
 const redactionModes = <RedactionMode>[
@@ -51,7 +51,7 @@ const sampleRedactionFields = <FieldType>[
 DocumentFilter uiToDocumentFilter(UiDocumentFilter ui) {
   return DocumentFilter(
     country: ui.country,
-    region: ui.country == Country.usa ? ui.region : null,
+    region: ui.country == CountryID.usa ? ui.region : null,
     documentType: ui.documentType,
   );
 }

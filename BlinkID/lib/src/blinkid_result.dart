@@ -54,6 +54,9 @@ class BlinkIdScanningResult {
   /// The race of the document owner.
   StringResult? race;
 
+  /// The ethnicity of the document owner.
+  StringResult? ethnicity;
+
   /// The religion of the document owner.
   StringResult? religion;
 
@@ -304,6 +307,7 @@ class BlinkIdScanningResult {
       'nationality',
     );
     race = createStringResult(nativeBlinkIdScanningResult, 'race');
+    ethnicity = createStringResult(nativeBlinkIdScanningResult, 'ethnicity');
     religion = createStringResult(nativeBlinkIdScanningResult, 'religion');
     profession = createStringResult(nativeBlinkIdScanningResult, 'profession');
     maritalStatus = createStringResult(

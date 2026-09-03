@@ -60,6 +60,9 @@ class BlinkIdSerializationUtils {
             if let race = scanningResult.race {
                 scanningResultDict["race"] = serializeStringResult(race)
             }
+            if let ethnicity = scanningResult.ethnicity {
+                scanningResultDict["ethnicity"] = serializeStringResult(ethnicity)
+            }
             if let religion = scanningResult.religion {
                 scanningResultDict["religion"] = serializeStringResult(religion)
             }
@@ -239,16 +242,38 @@ class BlinkIdSerializationUtils {
         // TODO: Align country/region/documentType strings with Android (enum.name lowercased).
         // iOS uses rawValue here; values usually match Dart/TS types but are not guaranteed
         // identical for every enum. Prefer shared explicit string mappers on both platforms.
-        [
-            "country": documentClassInfo.country.rawValue,
-            "region": documentClassInfo.region.rawValue,
-            "documentType": documentClassInfo.documentType.rawValue,
+        var result: [String: Any?] = [
             "countryName": documentClassInfo.countryName,
             "isoNumericCountryCode": documentClassInfo.isoNumericCountryCode,
             "isoAlpha2CountryCode": documentClassInfo.isoAlpha2CountryCode,
             "isoAlpha3CountryCode": documentClassInfo.isoAlpha3CountryCode,
-            "isEmpty": documentClassInfo.isEmpty()
+            "empty": documentClassInfo.isEmpty()
         ]
+        if let country = documentClassInfo.country {
+            result["country"] = serializeClassInfoComponent(
+                id: country.countryId?.rawValue,
+                rawValue: country.rawValue
+            )
+        }
+        if let region = documentClassInfo.region {
+            result["region"] = serializeClassInfoComponent(
+                id: region.regionId?.rawValue,
+                rawValue: region.rawValue
+            )
+        }
+        if let documentType = documentClassInfo.documentType {
+            result["documentType"] = serializeClassInfoComponent(
+                id: documentType.documentTypeId?.rawValue,
+                rawValue: documentType.rawValue
+            )
+        }
+        return result
+    }
+
+    private static func serializeClassInfoComponent(id: String?, rawValue: String) -> [String: Any] {
+        var component: [String: Any] = ["rawValue": rawValue]
+        if let id { component["id"] = id }
+        return component
     }
     
     static func serializeDataMatchResult(_ dataMatchResult: DataMatchResult?) -> Dictionary<String, Any?> {
@@ -665,6 +690,9 @@ class BlinkIdSerializationUtils {
             if let race = vizResult.race {
                 vizResultDict["race"] = serializeStringResult(race)
             }
+            if let ethnicity = vizResult.ethnicity {
+                vizResultDict["ethnicity"] = serializeStringResult(ethnicity)
+            }
             if let religion = vizResult.religion {
                 vizResultDict["religion"] = serializeStringResult(religion)
             }
@@ -854,6 +882,9 @@ class BlinkIdSerializationUtils {
         }
         if let lastName = parentInfo.lastName {
             parentInfoDict["lastName"] = serializeStringResult(lastName)
+        }
+        if let fullName = parentInfo.fullName {
+            parentInfoDict["fullName"] = serializeStringResult(fullName)
         }
         return parentInfoDict
     }

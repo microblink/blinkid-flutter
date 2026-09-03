@@ -32,6 +32,7 @@ class BlinkIdResultBuilder {
         buildResult(result.personalIdNumber, "Personal Id Number") +
         buildResult(result.profession, "Profession") +
         buildResult(result.race, "Race") +
+        buildResult(result.ethnicity, "Ethnicity") +
         buildResult(result.religion, "Religion") +
         buildResult(result.residentialStatus, "Residential Status") +
         buildResult(result.countryCode, "Country code") +
@@ -40,6 +41,7 @@ class BlinkIdResultBuilder {
           result.nationalInsuranceNumber,
           "National insurance number",
         ) +
+        buildParentsInfoResult(result.parentsInfo) +
         buildDriverLicenceResult(result.driverLicenseDetailedInfo) +
         buildDataMatchResult(result.dataMatchResult) +
         buildDocumentClassInfoResult(result.documentClassInfo) +
@@ -186,9 +188,11 @@ class BlinkIdResultBuilder {
         buildResult(result.manufacturingYear, "Manufacturing year") +
         buildResult(result.mothersName, "Mother's name") +
         buildResult(result.fathersName, "Father's name") +
+        buildParentsInfoResult(result.parentsInfo) +
         buildResult(result.personalIdNumber, "Personal ID number") +
         buildResult(result.profession, "Profession") +
         buildResult(result.race, "Race") +
+        buildResult(result.ethnicity, "Ethnicity") +
         buildResult(result.religion, "Religion") +
         buildResult(result.remarks, "Remarks") +
         buildResult(result.residencePermitType, "Residence permit type") +
@@ -255,7 +259,10 @@ class BlinkIdResultBuilder {
       return "";
     }
 
-    return "\nDocument class information:\nCountry: ${result.country?.name}\nRegion: ${result.region?.name}\nDocument type: ${result.documentType?.name}\n";
+    return "\nDocument class information:\n"
+        "Country: id=${result.country?.id?.name}, rawValue=${result.country?.rawValue}\n"
+        "Region: id=${result.region?.id?.name}, rawValue=${result.region?.rawValue}\n"
+        "Document type: id=${result.documentType?.id?.name}, rawValue=${result.documentType?.rawValue}\n";
   }
 
   static String buildDateResult(DateResult? result, String propertyName) {
@@ -309,6 +316,20 @@ class BlinkIdResultBuilder {
       dataMatchResultString += "${field.field?.name}: ${field.state?.name}\n";
     }
     return dataMatchResultString;
+  }
+
+  static String buildParentsInfoResult(List<ParentInfo>? parentsInfoResult) {
+    if (parentsInfoResult == null) return "";
+
+    String resultString = "";
+    for (ParentInfo parentInfo in parentsInfoResult) {
+      resultString +=
+          buildResult(parentInfo.firstName, "First name") +
+          buildResult(parentInfo.lastName, "Last name") +
+          buildResult(parentInfo.fullName, "Full name");
+    }
+
+    return resultString == "" ? "" : "Parents info:\n$resultString";
   }
 
   static String buildDependentsInfoResult(

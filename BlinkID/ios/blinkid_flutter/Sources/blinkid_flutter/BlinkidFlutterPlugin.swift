@@ -36,6 +36,7 @@ public class BlinkIdFlutterPlugin: NSObject, FlutterPlugin {
         case .directApi:    Task { await performDirectApiScan(call) }
         case .loadSdk:      Task { await loadSdk(call) }
         case .unloadSdk:    Task { await unloadSdk(call) }
+        case .refreshLicenseLease: Task { await refreshLicenseLease() }
         }
     }
     
@@ -52,6 +53,26 @@ public class BlinkIdFlutterPlugin: NSObject, FlutterPlugin {
         }
     }
     
+    private func refreshLicenseLease() async {
+        do {
+            guard blinkIdSdk != nil else {
+                throw BlinkIdFlutterError.initError(
+                    "The BlinkID SDK is not initialized. Call the loadBlinkIdSdk() method to pre-load the SDK first, or perform a scan."
+                )
+            }
+            try await BlinkIDSdk.refreshLicenseLease()
+            result?(true)
+        } catch let blinkIdError as BlinkIdFlutterError {
+            throwFlutterError(with: blinkIdError.localizedDescription)
+        } catch {
+            if let sdkError = error as? InvalidLicenseKeyError {
+                throwFlutterError(with: sdkError.message)
+            } else {
+                throwFlutterError(with: error.localizedDescription)
+            }
+        }
+    }
+
     private func unloadSdk(_ call: FlutterMethodCall) async {
         do {
             guard let arguments = call.arguments as? [String: Any],
@@ -256,6 +277,7 @@ enum BlinkIdFlutterMethodChannelArguments: String {
     case directApi = "performDirectApiScan"
     case loadSdk = "loadBlinkIdSdk"
     case unloadSdk = "unloadBlinkIdSdk"
+    case refreshLicenseLease = "refreshLicenseLease"
 }
 
 enum BlinkIdFlutterError: LocalizedError {
