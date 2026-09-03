@@ -23,6 +23,7 @@ class MethodChannelBlinkIdFlutter extends BlinkIdFlutterPlatform {
   static const String ARG_SCAN_DIRECT_API_METHOD = 'performDirectApiScan';
   static const String ARG_LOAD_BLINKID_SDK = 'loadBlinkIdSdk';
   static const String ARG_UNLOAD_BLINKID_SDK = 'unloadBlinkIdSdk';
+  static const String ARG_REFRESH_LICENSE_LEASE = 'refreshLicenseLease';
   static const String ARG_DELETE_CACHED_RESOURCES = 'deleteCachedResources';
   static const String ARG_BLINKID_SDK_SETTINGS = 'blinkIdSdkSettings';
   static const String ARG_SESSION_SETTINGS = 'blinkIdSessionSettings';
@@ -172,5 +173,17 @@ class MethodChannelBlinkIdFlutter extends BlinkIdFlutterPlatform {
         jsonEncode(deleteCachedResources),
       ),
     });
+  }
+
+  /// The `refreshLicenseLease` platform channel method refreshes the BlinkID SDK license lease.
+  ///
+  /// This method can be called periodically to maintain an active license status.
+  /// The frequency of refresh calls depends on your license configuration.
+  ///
+  /// The BlinkID SDK must already be initialized (by calling [`loadBlinkIdSdk`]
+  /// or any of the scanning methods) before calling this method.
+  @override
+  Future<void> refreshLicenseLease() async {
+    await methodChannel.invokeMethod(ARG_REFRESH_LICENSE_LEASE);
   }
 }

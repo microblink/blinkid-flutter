@@ -30,6 +30,7 @@ class BlinkIdFlutterPlugin() : FlutterPlugin, MethodCallHandler, ActivityAware,
     private val BLINKID_METHOD_PERFORM_DIRECTAPI_SCAN = "performDirectApiScan"
     private val BLINKID_LOAD_SDK = "loadBlinkIdSdk"
     private val BLINKID_UNLOAD_SDK = "unloadBlinkIdSdk"
+    private val BLINKID_REFRESH_LICENSE_LEASE = "refreshLicenseLease"
     private val BLINKID_REQUEST_CODE = 1452
     private val BLINKID_ERROR_RESULT_CODE = "blinkid_android_error"
     private var blinkIdSdk: BlinkIdSdk? = null
@@ -52,6 +53,7 @@ class BlinkIdFlutterPlugin() : FlutterPlugin, MethodCallHandler, ActivityAware,
         when (call.method) {
             BLINKID_LOAD_SDK -> (CoroutineScope(Dispatchers.Main).launch { loadBlinkIdSdk(call, result) })
             BLINKID_UNLOAD_SDK -> (unloadBlinkIdSdk(call, result))
+            BLINKID_REFRESH_LICENSE_LEASE -> (CoroutineScope(Dispatchers.Main).launch { refreshLicenseLease(result) })
             BLINKID_METHOD_PERFORM_SCAN -> (CoroutineScope(Dispatchers.Main).launch { performScan(call, result) })
             BLINKID_METHOD_PERFORM_DIRECTAPI_SCAN -> { CoroutineScope(Dispatchers.Main).launch { performDirectApiScan(call, result) }
             }
@@ -70,6 +72,19 @@ class BlinkIdFlutterPlugin() : FlutterPlugin, MethodCallHandler, ActivityAware,
         try {
             ensureLoadedSdk(call)
             result.success(true)
+        } catch (error: Exception) {
+            result.error(BLINKID_ERROR_RESULT_CODE, error.message, null)
+        }
+    }
+
+    private suspend fun refreshLicenseLease(result: Result) {
+        try {
+            val sdk = BlinkIdSdk.sdkInstance
+                ?: throw IllegalStateException(
+                    "The BlinkID SDK is not initialized. Call loadBlinkIdSdk() first, or perform a scan."
+                )
+            sdk.refreshLicenseLease()
+            result.success(null)
         } catch (error: Exception) {
             result.error(BLINKID_ERROR_RESULT_CODE, error.message, null)
         }

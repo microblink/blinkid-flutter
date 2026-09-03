@@ -391,6 +391,13 @@ Set `deleteCachedResources: true` to also delete downloaded SDK models from devi
 
 This method is automatically called after each successful scan session.
 
+#### `refreshLicenseLease`
+Refreshes the SDK license lease. Can be called periodically to maintain an active license status; the required frequency depends on your license configuration. The SDK must already be initialized (via `loadBlinkIdSdk` or a scan) before calling this method.
+
+```dart
+await blinkIdPlugin.refreshLicenseLease();
+```
+
 ### <a name="blinkid-settings"></a> BlinkID Settings
 
 | Setting class | Description |
@@ -492,6 +499,7 @@ Highlights for Flutter:
 | **Document capture** | `inputImageCropped` → `cropType`; added `inputImageSelectionStrategy` |
 | **Barcode** | `aztecScanningEnabled` |
 | **Results** | `ethnicity`; `ParentInfo.fullName`; `FieldType.ethnicity` / `parentFullName` |
+| **License** | `refreshLicenseLease()` — refresh the SDK license lease while initialized |
 
 #### Migrating SDK settings from v8000
 

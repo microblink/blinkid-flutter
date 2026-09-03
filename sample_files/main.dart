@@ -272,6 +272,23 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<void> refreshLicenseLease() async {
+    try {
+      await blinkIdPlugin.refreshLicenseLease();
+      setState(() {
+        resultString = "License lease refreshed";
+      });
+    } catch (error) {
+      setState(() {
+        if (error is PlatformException) {
+          resultString = "Error refreshing license lease: ${error.message}";
+        } else {
+          resultString = "Error refreshing license lease: $error";
+        }
+      });
+    }
+  }
+
   void setImages(BlinkIdScanningResult? result) {
     if (result?.firstDocumentImage != null) {
       firstDocumentImageBase64 = result!.firstDocumentImage!;
@@ -489,6 +506,20 @@ class _MyAppState extends State<MyApp> {
                         });
                       },
                       child: Text("DirectAPI SingleSide"),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: Center(
+                      child: TextButton(
+                        onPressed: () => refreshLicenseLease(),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text("Refresh License Lease"),
+                      ),
                     ),
                   ),
                   Text(resultString),

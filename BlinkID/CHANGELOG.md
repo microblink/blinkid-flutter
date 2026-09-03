@@ -21,6 +21,7 @@ Updated to BlinkID native SDKs **v8001.0.0** (Android & iOS). See also the [plat
     - Improved Persian digit recognition for regional documents.
 - Mandatory data redaction: Netherlands DL QR code added to the redacted list.
 - OTA (over-the-air) resources: configure separately from base ML resources via `BlinkIdSdkSettings.otaResourcesConfig`.
+- Added `refreshLicenseLease` to refresh the BlinkID SDK license lease while the SDK is initialized.
 
 ### Bug fixes
 - Document swap data caching: fixed an issue in continuous-video mode where data from a previously scanned document could persist after a new document was introduced. The SDK now detects document swaps and clears cached images (cropped faces, signatures, barcodes, etc.) to prevent cross-contamination.
@@ -104,6 +105,7 @@ Updated to BlinkID native SDKs **v8001.0.0** (Android & iOS). See also the [plat
 For step-by-step migration examples, see [What's new in v8001](https://github.com/microblink/blinkid-flutter/tree/master?tab=readme-ov-file#whats-new-in-v8001) in the README and [API changes in Release notes](https://github.com/microblink/blinkid-flutter/blob/master/Release%20notes.md#api-changes-v8001).
 
 ### Minor API changes
+- Added `refreshLicenseLease()` — refreshes the BlinkID SDK license lease. Can be called periodically to maintain an active license status; the required frequency depends on your license configuration. The SDK must already be initialized (via `loadBlinkIdSdk` or a scanning method) before calling this method.
 - Added `ethnicity` on `BlinkIdScanningResult` and `VizResult`.
 - Added `fullName` on `ParentInfo`.
 - Added `FieldType.parentFullName` and `FieldType.ethnicity` for redaction.

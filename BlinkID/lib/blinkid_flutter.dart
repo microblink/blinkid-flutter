@@ -128,4 +128,15 @@ class BlinkIdFlutter {
       deleteCachedResources: deleteCachedResources,
     );
   }
+
+  /// The `refreshLicenseLease` method refreshes the BlinkID SDK license lease.
+  ///
+  /// This method can be called periodically to maintain an active license status.
+  /// The frequency of refresh calls depends on your license configuration.
+  ///
+  /// The BlinkID SDK must already be initialized (by calling [`loadBlinkIdSdk`]
+  /// or any of the scanning methods) before calling this method.
+  Future<void> refreshLicenseLease() async {
+    return BlinkIdFlutterPlatform.instance.refreshLicenseLease();
+  }
 }
