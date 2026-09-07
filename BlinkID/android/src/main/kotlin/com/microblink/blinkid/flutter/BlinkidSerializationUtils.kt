@@ -283,6 +283,8 @@ object BlinkIdSerializationUtils {
 
     private fun serializeDocumentClassInfo(documentClassInfo: DocumentClassInfo): Map<String, Any?> {
         val documentClassInfoDict: MutableMap<String, Any?> = mutableMapOf()
+        documentClassInfoDict["empty"] = isDocumentClassInfoEmpty(documentClassInfo)
+
         // TODO: Align country/region/documentType strings with iOS (rawValue). Android uses
         // enum.name with only the first character lowercased; values usually match but are not
         // guaranteed identical for every enum. Prefer shared explicit string mappers on both platforms.
@@ -307,6 +309,9 @@ object BlinkIdSerializationUtils {
         documentClassInfo.countryName?.let {
             documentClassInfoDict["countryName"] = it
         }
+        documentClassInfo.isoNumericCountryCode?.let {
+            documentClassInfoDict["isoNumericCountryCode"] = it
+        }
         documentClassInfo.isoAlpha2CountryCode?.let {
             documentClassInfoDict["isoAlpha2CountryCode"] = it
         }
@@ -314,6 +319,15 @@ object BlinkIdSerializationUtils {
             documentClassInfoDict["isoAlpha3CountryCode"] = it
         }
         return documentClassInfoDict
+    }
+
+    private fun isDocumentClassInfoEmpty(documentClassInfo: DocumentClassInfo): Boolean {
+        val classIds = listOf(
+            documentClassInfo.country?.id?.name,
+            documentClassInfo.region?.id?.name,
+            documentClassInfo.documentType?.id?.name,
+        )
+        return classIds.any { it == null } || classIds.all { it == "None" }
     }
 
     private fun serializeClassInfoComponent(idName: String?, rawValue: String): Map<String, Any> {
