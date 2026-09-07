@@ -741,8 +741,8 @@ enum CountryID {
   brunei,
   @JsonValue("bulgaria")
   bulgaria,
-  @JsonValue("bambodia")
-  bambodia,
+  @JsonValue("cambodia")
+  cambodia,
   @JsonValue("canada")
   canada,
   @JsonValue("chile")

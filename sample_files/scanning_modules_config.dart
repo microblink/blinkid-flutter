@@ -111,7 +111,7 @@ class ScanningModulesConfig {
 
   OtaResourcesConfig? toOtaResourcesConfig() {
     if (!otaResourcesDownload) {
-      return null;
+      return OtaResourcesConfig(checkForUpdates: false);
     }
 
     final serviceUrl = otaResourcesServiceUrl.trim();
