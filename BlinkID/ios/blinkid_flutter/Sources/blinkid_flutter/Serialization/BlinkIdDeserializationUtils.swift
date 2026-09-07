@@ -61,6 +61,20 @@ struct BlinkIdDeserializationUtils {
         return nil
     }
 
+    private static func nonBlankString(
+        _ value: Any?,
+        defaultValue: String
+    ) -> String {
+        guard let stringValue = value as? String else {
+            return defaultValue
+        }
+
+        let trimmedValue = stringValue.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        return trimmedValue.isEmpty ? defaultValue : trimmedValue
+    }
+
     static func deserializeBlinkIdSdkSettings(_ sdkSettingsDict: Dictionary<String, Any>?) -> BlinkIDSdkSettings? {
         var blinkidSdkSettings: BlinkIDSdkSettings?
         
@@ -74,8 +88,14 @@ struct BlinkIdDeserializationUtils {
         
         let resourcesDict = sdkSettingsDict?["resourcesConfig"] as? Dictionary<String, Any>
         let download = resourcesDict?["download"] as? Bool ?? true
-        let serviceUrl = resourcesDict?["serviceUrl"] as? String ?? defaultResourceDownloadUrl
-        let localFolder = resourcesDict?["localFolder"] as? String ?? defaultResourceLocalFolder
+        let serviceUrl = nonBlankString(
+            resourcesDict?["serviceUrl"],
+            defaultValue: defaultResourceDownloadUrl
+        )
+        let localFolder = nonBlankString(
+            resourcesDict?["localFolder"],
+            defaultValue: defaultResourceLocalFolder
+        )
 
         var bundleUrl: URL? = nil
         if let bundleIdentifier = resourcesDict?["bundleIdentifier"] as? String,
@@ -94,8 +114,14 @@ struct BlinkIdDeserializationUtils {
         let otaResourcesDict = sdkSettingsDict?["otaResourcesConfig"] as? Dictionary<String, Any>
         let otaCheckForUpdates = otaResourcesDict?["checkForUpdates"] as? Bool ?? true
         let otaStrict = otaResourcesDict?["strict"] as? Bool ?? false
-        let otaServiceUrl = otaResourcesDict?["serviceUrl"] as? String ?? defaultOtaDownloadUrl
-        let otaLocalFolder = otaResourcesDict?["localFolder"] as? String ?? defaultOtaResourcesLocalFolder
+        let otaServiceUrl = nonBlankString(
+            otaResourcesDict?["serviceUrl"],
+            defaultValue: defaultOtaDownloadUrl
+        )
+        let otaLocalFolder = nonBlankString(
+            otaResourcesDict?["localFolder"],
+            defaultValue: defaultOtaResourcesLocalFolder
+        )
         
         var otaBundleUrl: URL? = nil
         if let otaBundleIdentifier = otaResourcesDict?["bundleIdentifier"] as? String,

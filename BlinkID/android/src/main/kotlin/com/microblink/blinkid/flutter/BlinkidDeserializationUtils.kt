@@ -257,12 +257,22 @@ object BlinkIdDeserializationUtils {
         )
     }
 
-    private fun deserializeTimeoutMilliseconds(value: Any?, default: Duration): Duration {
-        return when (value) {
-            is Int -> value.milliseconds
-            is Long -> value.toInt().milliseconds
-            is Double -> value.toInt().milliseconds
-            else -> default
+    private fun deserializeTimeoutMilliseconds(
+        value: Any?,
+        default: Duration,
+    ): Duration {
+        val milliseconds = when (value) {
+            is Int -> value.toLong()
+            is Long -> value
+            is Double ->
+                if (value.isFinite()) value.toLong() else return default
+            else -> return default
+        }
+
+        return if (milliseconds in 0..Int.MAX_VALUE.toLong()) {
+            milliseconds.milliseconds
+        } else {
+            default
         }
     }
 
