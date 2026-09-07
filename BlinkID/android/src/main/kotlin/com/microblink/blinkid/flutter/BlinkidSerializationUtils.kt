@@ -285,24 +285,21 @@ object BlinkIdSerializationUtils {
         val documentClassInfoDict: MutableMap<String, Any?> = mutableMapOf()
         documentClassInfoDict["empty"] = isDocumentClassInfoEmpty(documentClassInfo)
 
-        // TODO: Align country/region/documentType strings with iOS (rawValue). Android uses
-        // enum.name with only the first character lowercased; values usually match but are not
-        // guaranteed identical for every enum. Prefer shared explicit string mappers on both platforms.
         documentClassInfo.country?.let { country ->
             documentClassInfoDict["country"] = serializeClassInfoComponent(
-                idName = country.id?.name,
+                id = country.id?.let { BlinkIdClassInfoIdMappings.serializeCountryId(it) },
                 rawValue = country.rawValue,
             )
         }
         documentClassInfo.region?.let { region ->
             documentClassInfoDict["region"] = serializeClassInfoComponent(
-                idName = region.id?.name,
+                id = region.id?.let { BlinkIdClassInfoIdMappings.serializeRegionId(it) },
                 rawValue = region.rawValue,
             )
         }
         documentClassInfo.documentType?.let { documentType ->
             documentClassInfoDict["documentType"] = serializeClassInfoComponent(
-                idName = documentType.id?.name,
+                id = documentType.id?.let { BlinkIdClassInfoIdMappings.serializeDocumentTypeId(it) },
                 rawValue = documentType.rawValue,
             )
         }
@@ -330,11 +327,9 @@ object BlinkIdSerializationUtils {
         return classIds.any { it == null } || classIds.all { it == "None" }
     }
 
-    private fun serializeClassInfoComponent(idName: String?, rawValue: String): Map<String, Any> {
+    private fun serializeClassInfoComponent(id: String?, rawValue: String): Map<String, Any> {
         val component = mutableMapOf<String, Any>("rawValue" to rawValue)
-        idName?.let {
-            component["id"] = it.replaceFirstChar { char -> char.lowercase() }
-        }
+        id?.let { component["id"] = it }
         return component
     }
 

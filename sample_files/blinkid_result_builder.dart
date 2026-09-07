@@ -260,9 +260,9 @@ class BlinkIdResultBuilder {
     }
 
     return "\nDocument class information:\n"
-        "Country: id=${result.country?.id?.name}, rawValue=${result.country?.rawValue}\n"
-        "Region: id=${result.region?.id?.name}, rawValue=${result.region?.rawValue}\n"
-        "Document type: id=${result.documentType?.id?.name}, rawValue=${result.documentType?.rawValue}\n";
+        "Country: ${result.country?.id?.name ?? result.country?.rawValue}\n"
+        "Region: ${result.region?.id?.name ?? result.region?.rawValue}\n"
+        "Document type: ${result.documentType?.id?.name ?? result.documentType?.rawValue}\n";
   }
 
   static String buildDateResult(DateResult? result, String propertyName) {

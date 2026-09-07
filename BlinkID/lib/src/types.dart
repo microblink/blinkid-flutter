@@ -873,10 +873,10 @@ enum CountryID {
   turkey,
   @JsonValue("uae")
   uae,
-  @JsonValue("gganda")
-  gganda,
-  @JsonValue("uK") // TODO should be uk
-  uK,
+  @JsonValue("uganda")
+  uganda,
+  @JsonValue("uk")
+  uk,
   @JsonValue("ukraine")
   ukraine,
   @JsonValue("usa")
@@ -1475,8 +1475,8 @@ enum RegionID {
   rioDeJaneiro,
   @JsonValue("rioGrandeDoSul")
   rioGrandeDoSul,
-  @JsonValue("northWestTerritories")
-  northWestTerritories,
+  @JsonValue("northwestTerritories")
+  northwestTerritories,
   @JsonValue("nunavut")
   nunavut,
   @JsonValue("princeEdwardIsland")
@@ -1509,8 +1509,8 @@ enum RegionID {
   haryana,
   @JsonValue("sergipe")
   sergipe,
-  @JsonValue("alagos")
-  alagos,
+  @JsonValue("alagoas")
+  alagoas,
   @JsonValue("bangsamoro")
   bangsamoro,
   @JsonValue("telangana")
@@ -1641,8 +1641,8 @@ enum DocumentTypeID {
   minorsPassport,
   @JsonValue("minorsPublicServicesCard")
   minorsPublicServicesCard,
-  @JsonValue("drivingPriviligeCard")
-  drivingPriviligeCard,
+  @JsonValue("drivingPrivilegeCard")
+  drivingPrivilegeCard,
   @JsonValue("asylumRequest")
   asylumRequest,
   @JsonValue("driverQualificationCard")
@@ -1673,8 +1673,8 @@ enum DocumentTypeID {
   temporaryProtectionPermit,
   @JsonValue("afghanCitizenCard")
   afghanCitizenCard,
-  @JsonValue("eId")
-  eId,
+  @JsonValue("eid")
+  eid,
   @JsonValue("pass")
   pass,
   @JsonValue("sisId")
@@ -1899,7 +1899,7 @@ class Country {
   Country({this.id, required this.rawValue});
   factory Country.fromNativeMap(Map<String, dynamic> map) {
     return Country(
-      id: enumFromValue(CountryID.values.toList(), map['id']),
+      id: enumFromJsonValue(_$CountryIDEnumMap, map['id']),
       rawValue: map['rawValue'] as String? ?? '',
     );
   }
@@ -1910,7 +1910,7 @@ class Region {
   Region({this.id, required this.rawValue});
   factory Region.fromNativeMap(Map<String, dynamic> map) {
     return Region(
-      id: enumFromValue(RegionID.values.toList(), map['id']),
+      id: enumFromJsonValue(_$RegionIDEnumMap, map['id']),
       rawValue: map['rawValue'] as String? ?? '',
     );
   }
@@ -1921,7 +1921,7 @@ class DocumentType {
   DocumentType({this.id, required this.rawValue});
   factory DocumentType.fromNativeMap(Map<String, dynamic> map) {
     return DocumentType(
-      id: enumFromValue(DocumentTypeID.values.toList(), map['id']),
+      id: enumFromJsonValue(_$DocumentTypeIDEnumMap, map['id']),
       rawValue: map['rawValue'] as String? ?? '',
     );
   }
@@ -4127,6 +4127,15 @@ class ParentInfo {
     lastName = createStringResult(nativeParentInfo, 'lastName');
     fullName = createStringResult(nativeParentInfo, 'fullName');
   }
+}
+
+/// Resolves a native class-info identifier using declared [@JsonValue] wire strings.
+T? enumFromJsonValue<T>(Map<T, String> values, dynamic input) {
+  if (input is! String) return null;
+  for (final entry in values.entries) {
+    if (entry.value == input) return entry.key;
+  }
+  return null;
 }
 
 /// Helper method for serializing enums from the native Android and iOS platforms.

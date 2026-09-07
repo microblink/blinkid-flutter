@@ -491,11 +491,11 @@ object BlinkIdDeserializationUtils {
     }
 
     private fun parseCountryId(value: String): CountryId? =
-        CountryId.entries.find { it.name.equals(value, ignoreCase = true) }
+        BlinkIdClassInfoIdMappings.parseCountryId(value)
     private fun parseRegionId(value: String): RegionId? =
-        RegionId.entries.find { it.name.equals(value, ignoreCase = true) }
+        BlinkIdClassInfoIdMappings.parseRegionId(value)
     private fun parseDocumentTypeId(value: String): DocumentTypeId? =
-        DocumentTypeId.entries.find { it.name.equals(value, ignoreCase = true) }
+        BlinkIdClassInfoIdMappings.parseDocumentTypeId(value)
 
     fun base64ToBitmap(base64Str: String?): Bitmap? {
         return try {

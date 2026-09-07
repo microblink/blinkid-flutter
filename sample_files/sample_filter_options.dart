@@ -13,7 +13,7 @@ const sampleCountries = <CountryID>[
   CountryID.usa,
   CountryID.croatia,
   CountryID.germany,
-  CountryID.uK,
+  CountryID.uk,
   CountryID.australia,
 ];
 
