@@ -123,20 +123,31 @@ class ScanningModulesConfig {
     );
   }
 
-  BlinkIdScanningSettings toScanningSettings() {
+  BlinkIdScanningSettings toScanningSettings({
+    bool forDirectApi = false,
+  }) {
+    final documentCaptureSettings = documentCaptureEnabled
+        ? DocumentCaptureModuleSettings.fromJson(documentCapture.toJson())
+        : null;
+
+    if (!forDirectApi) {
+      documentCaptureSettings?.cropType = InputImageCropType.notCropped;
+    }
+
     return BlinkIdScanningSettings(
       barcodeModule: barcodeEnabled ? barcode : null,
-      documentCaptureModule:
-          documentCaptureEnabled ? documentCapture : null,
+      documentCaptureModule: documentCaptureSettings,
       mrzModule: mrzEnabled ? mrz : null,
       vizModule: vizEnabled ? viz : null,
     );
   }
 
-  BlinkIdSessionSettings toSessionSettings() {
+  BlinkIdSessionSettings toSessionSettings({
+    bool forDirectApi = false,
+  }) {
     return BlinkIdSessionSettings(
       scanningMode: scanningMode,
-      scanningSettings: toScanningSettings(),
+      scanningSettings: toScanningSettings(forDirectApi: forDirectApi),
       stepTimeoutDuration: stepTimeoutDuration,
       inactivityTimeoutDuration: inactivityTimeoutDuration,
     );

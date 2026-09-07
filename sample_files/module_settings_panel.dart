@@ -404,7 +404,7 @@ class _DocumentCaptureModuleCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Text(
-            'cropped / unknown: DirectAPI only. Camera requires not-cropped.',
+            'cropped / unknown: DirectAPI only. Camera scans always use not-cropped.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
