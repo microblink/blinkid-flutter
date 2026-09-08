@@ -42,7 +42,9 @@ struct BlinkIdDeserializationUtils {
         _ value: Any?,
         defaultSeconds: TimeInterval
     ) -> TimeInterval {
-        guard let milliseconds = parseTimeoutMilliseconds(value) else {
+        guard let milliseconds = parseTimeoutMilliseconds(value),
+              milliseconds >= 0,
+              milliseconds <= Int32.max else {
             return defaultSeconds
         }
         return Double(milliseconds) / 1000.0

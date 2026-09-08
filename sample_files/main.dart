@@ -275,10 +275,12 @@ class _MyAppState extends State<MyApp> {
   Future<void> refreshLicenseLease() async {
     try {
       await blinkIdPlugin.refreshLicenseLease();
+      if (!mounted) return;
       setState(() {
         resultString = "License lease refreshed";
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         if (error is PlatformException) {
           resultString = "Error refreshing license lease: ${error.message}";
