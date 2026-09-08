@@ -501,7 +501,7 @@ Highlights for Flutter:
 | **Results** | `ethnicity`; `ParentInfo.fullName`; `FieldType.ethnicity` / `parentFullName` |
 | **License** | `refreshLicenseLease()` — refresh the SDK license lease while initialized |
 
-#### Migrating SDK settings from v8000
+### Migrating SDK settings from v8000
 
 ```dart
 // v8000
@@ -531,7 +531,7 @@ final sdkSettings = BlinkIdSdkSettings(
 
 Do **not** cross-wire hosts: base resources use `https://models.cdn.microblink.com/resources`; OTA uses `https://blinkid-ota.microblink.com`.
 
-#### Resource download timeouts
+### Resource download timeouts
 
 `resourcesConfig.requestTimeout` and `otaResourcesConfig.requestTimeout` accept a [`RequestTimeout`](BlinkID/lib/src/blinkid_settings.dart) object (milliseconds). Omit `requestTimeout` to use native defaults (30 seconds per timeout on current BlinkID native SDKs).
 
@@ -549,7 +549,7 @@ otaResourcesConfig: OtaResourcesConfig(
 ),
 ```
 
-#### Migrating document capture settings
+### Migrating document capture settings
 
 ```dart
 // v8000
@@ -562,7 +562,7 @@ DocumentCaptureModuleSettings(cropType: InputImageCropType.cropped)
 
 Camera UX (`performScan`) must use `InputImageCropType.notCropped`.
 
-#### Document class info in results
+### Document class info in results
 
 ```dart
 final countryId = result.documentClassInfo?.country?.id;        // CountryID when known
