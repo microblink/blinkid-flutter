@@ -309,10 +309,8 @@ class BlinkIdFlutterPlugin() : FlutterPlugin, MethodCallHandler, ActivityAware,
 
             ScanActivityResultStatus.Canceled -> {
                 pendingScanResult.error(BLINKID_ERROR_RESULT_CODE, "Scanning is canceled.", null)
+                BlinkIdSdk.sdkInstance?.close()
                 blinkIdSdk = null
-                suspend {
-                    BlinkIdSdk.sdkInstance?.close()
-                }
             }
 
             ScanActivityResultStatus.ErrorSdkInit -> {

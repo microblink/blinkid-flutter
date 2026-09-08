@@ -133,6 +133,8 @@ public class BlinkIdFlutterPlugin: NSObject, FlutterPlugin {
             throwFlutterError(with: BlinkIdFlutterError.incorrectArgument("Flutter raw arguments").localizedDescription, result: result)
             return
         }
+
+        scanResult = result
         
         do {
             guard let blinkIdSdk = try await ensureLoadedSdk(call) else {
@@ -163,8 +165,6 @@ public class BlinkIdFlutterPlugin: NSObject, FlutterPlugin {
             
             await addFlutterPinglet(with: analyzer.sessionNumber)
 
-            scanResult = result
-            
             let scanningUxModel = await BlinkIDUXModel(
                 analyzer: analyzer,
                 uxSettings: uxSettings) { blinkIdState in
