@@ -55,6 +55,11 @@ struct BlinkIdDeserializationUtils {
             return intValue
         }
         if let doubleValue = value as? Double {
+            guard doubleValue.isFinite,
+                  doubleValue >= 0,
+                  doubleValue <= Double(Int32.max) else {
+                return nil
+            }
             return Int(doubleValue)
         }
         if let numberValue = value as? NSNumber {
