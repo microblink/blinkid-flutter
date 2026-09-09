@@ -38,6 +38,59 @@ class OptionalScanSettingsPanel extends StatelessWidget {
         _ClassFilterCard(config: config, onChanged: onChanged),
         const SizedBox(height: 8),
         _RedactionResolverCard(config: config, onChanged: onChanged),
+        const SizedBox(height: 8),
+        _OtaResourcesCard(config: config, onChanged: onChanged),
+      ],
+    );
+  }
+}
+
+class _OtaResourcesCard extends StatelessWidget {
+  final ScanningModulesConfig config;
+  final VoidCallback onChanged;
+
+  const _OtaResourcesCard({required this.config, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return SampleModuleCard(
+      title: 'OTA resources download',
+      subtitle: config.otaResourcesDownload
+          ? 'Enabled — SDK initialization'
+          : 'Disabled (null)',
+      enabled: config.otaResourcesDownload,
+      onEnabledChanged: (enabled) {
+        config.otaResourcesDownload = enabled;
+        onChanged();
+      },
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            'Enables over-the-air document resource download during SDK '
+            'initialization. When disabled, OTA settings are not sent to the SDK.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        SampleStringSettingField(
+          label: 'Service URL',
+          value: config.otaResourcesServiceUrl,
+          placeholder: defaultOtaServiceUrl,
+          onChanged: (serviceUrl) {
+            config.otaResourcesServiceUrl = serviceUrl;
+            onChanged();
+          },
+        ),
+        SampleBoolSettingTile(
+          title: 'Strict',
+          value: config.otaResourcesStrict,
+          onChanged: (otaResourcesStrict) {
+            config.otaResourcesStrict = otaResourcesStrict;
+            onChanged();
+          },
+        ),
       ],
     );
   }
@@ -242,11 +295,11 @@ class _DocumentFilterRuleEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final regionOptions =
-        rule.country == Country.usa ? sampleUsaRegions : const <Region>[];
+        rule.country == CountryID.usa ? sampleUsaRegions : const <RegionID>[];
 
     return Column(
       children: [
-        SampleOptionalEnumDropdown<Country>(
+        SampleOptionalEnumDropdown<CountryID>(
           label: 'Country',
           value: rule.country,
           options: sampleCountries,
@@ -261,7 +314,7 @@ class _DocumentFilterRuleEditor extends StatelessWidget {
           },
         ),
         if (regionOptions.isNotEmpty)
-          SampleOptionalEnumDropdown<Region>(
+          SampleOptionalEnumDropdown<RegionID>(
             label: 'Region',
             value: rule.region,
             options: regionOptions,
@@ -275,7 +328,7 @@ class _DocumentFilterRuleEditor extends StatelessWidget {
               );
             },
           ),
-        SampleOptionalEnumDropdown<DocumentType>(
+        SampleOptionalEnumDropdown<DocumentTypeID>(
           label: 'Document type',
           value: rule.documentType,
           options: sampleDocumentTypes,

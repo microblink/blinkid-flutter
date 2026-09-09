@@ -11,6 +11,77 @@ import UIKit
 import BlinkIDUX
 
 struct BlinkIdDeserializationUtils {
+    private static let defaultResourceDownloadUrl = "https://models.cdn.microblink.com/resources"
+    private static let defaultResourceLocalFolder = "MLModels"
+    private static let defaultOtaDownloadUrl = "https://blinkid-ota.microblink.com"
+    private static let defaultOtaResourcesLocalFolder = "OTAMLModels"
+    private static let defaultTimeoutSeconds: TimeInterval = 30
+
+    private static func deserializeResourceRequestTimeout(_ value: Any?) -> RequestTimeout {
+        guard let map = value as? [String: Any] else {
+            return .default
+        }
+
+        return RequestTimeout(
+            connectionTimeout: deserializeTimeoutSeconds(
+                map["connectionTimeoutMilliseconds"],
+                defaultSeconds: defaultTimeoutSeconds
+            ),
+            readTimeout: deserializeTimeoutSeconds(
+                map["readTimeoutMilliseconds"],
+                defaultSeconds: defaultTimeoutSeconds
+            ),
+            writeTimeout: deserializeTimeoutSeconds(
+                map["writeTimeoutMilliseconds"],
+                defaultSeconds: defaultTimeoutSeconds
+            )
+        )
+    }
+
+    private static func deserializeTimeoutSeconds(
+        _ value: Any?,
+        defaultSeconds: TimeInterval
+    ) -> TimeInterval {
+        guard let milliseconds = parseTimeoutMilliseconds(value),
+              milliseconds >= 0,
+              milliseconds <= Int32.max else {
+            return defaultSeconds
+        }
+        return Double(milliseconds) / 1000.0
+    }
+
+    private static func parseTimeoutMilliseconds(_ value: Any?) -> Int? {
+        if let intValue = value as? Int {
+            return intValue
+        }
+        if let doubleValue = value as? Double {
+            guard doubleValue.isFinite,
+                  doubleValue >= 0,
+                  doubleValue <= Double(Int32.max) else {
+                return nil
+            }
+            return Int(doubleValue)
+        }
+        if let numberValue = value as? NSNumber {
+            return numberValue.intValue
+        }
+        return nil
+    }
+
+    private static func nonBlankString(
+        _ value: Any?,
+        defaultValue: String
+    ) -> String {
+        guard let stringValue = value as? String else {
+            return defaultValue
+        }
+
+        let trimmedValue = stringValue.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        return trimmedValue.isEmpty ? defaultValue : trimmedValue
+    }
+
     static func deserializeBlinkIdSdkSettings(_ sdkSettingsDict: Dictionary<String, Any>?) -> BlinkIDSdkSettings? {
         var blinkidSdkSettings: BlinkIDSdkSettings?
         
@@ -22,27 +93,57 @@ struct BlinkIdDeserializationUtils {
             blinkidSdkSettings?.licensee = licensee
         }
         
-        if let downloadResources = sdkSettingsDict?["downloadResources"] as? Bool {
-            blinkidSdkSettings?.downloadResources = downloadResources
-        }
-        
-        if let resourceDownloadUrl = sdkSettingsDict?["resourceDownloadUrl"] as? String {
-            blinkidSdkSettings?.resourceDownloadUrl = resourceDownloadUrl
-        }
-        
-        if let resourceLocalFolder = sdkSettingsDict?["resourceLocalFolder"] as? String {
-            blinkidSdkSettings?.resourceLocalFolder = resourceLocalFolder
-        }
-        
-        if let bundleURL = sdkSettingsDict?["bundleIdentifier"] as? String,
-           let bundle: Bundle = Bundle.init(identifier: bundleURL) {
-            blinkidSdkSettings?.bundleURL = bundle.bundleURL
+        let resourcesDict = sdkSettingsDict?["resourcesConfig"] as? Dictionary<String, Any>
+        let download = resourcesDict?["download"] as? Bool ?? true
+        let serviceUrl = nonBlankString(
+            resourcesDict?["serviceUrl"],
+            defaultValue: defaultResourceDownloadUrl
+        )
+        let localFolder = nonBlankString(
+            resourcesDict?["localFolder"],
+            defaultValue: defaultResourceLocalFolder
+        )
+
+        var bundleUrl: URL? = nil
+        if let bundleIdentifier = resourcesDict?["bundleIdentifier"] as? String,
+        let bundle = Bundle(identifier: bundleIdentifier) {
+            bundleUrl = bundle.bundleURL
         }
 
-        if let resourceRequestTimeout = sdkSettingsDict?["resourceRequestTimeout"] as? Int {
-            // TODO Bug in iOS native SDK
-            blinkidSdkSettings?.resourceRequestTimeout = BlinkID.RequestTimeout.default
+        blinkidSdkSettings?.resourcesConfiguration = ResourcesConfig(
+            download: download,
+            serviceUrl: serviceUrl,
+            localFolder: localFolder,
+            requestTimeout: deserializeResourceRequestTimeout(resourcesDict?["requestTimeout"]),
+            bundleUrl: bundleUrl
+        )
+
+        let otaResourcesDict = sdkSettingsDict?["otaResourcesConfig"] as? Dictionary<String, Any>
+        let otaCheckForUpdates = otaResourcesDict?["checkForUpdates"] as? Bool ?? true
+        let otaStrict = otaResourcesDict?["strict"] as? Bool ?? false
+        let otaServiceUrl = nonBlankString(
+            otaResourcesDict?["serviceUrl"],
+            defaultValue: defaultOtaDownloadUrl
+        )
+        let otaLocalFolder = nonBlankString(
+            otaResourcesDict?["localFolder"],
+            defaultValue: defaultOtaResourcesLocalFolder
+        )
+        
+        var otaBundleUrl: URL? = nil
+        if let otaBundleIdentifier = otaResourcesDict?["bundleIdentifier"] as? String,
+        let otaBundle = Bundle(identifier: otaBundleIdentifier) {
+            otaBundleUrl = otaBundle.bundleURL
         }
+        
+        blinkidSdkSettings?.otaResourcesConfiguration = OTAResourcesConfig(
+            checkForUpdates: otaCheckForUpdates,
+            strict: otaStrict,
+            serviceUrl: otaServiceUrl,
+            localFolder: otaLocalFolder,
+            requestTimeout: deserializeResourceRequestTimeout(otaResourcesDict?["requestTimeout"]),
+            bundleUrl: otaBundleUrl
+        )
         
         if let microblinkProxyUrl = sdkSettingsDict?["microblinkProxyUrl"] as? String {
             blinkidSdkSettings?.microblinkProxyURL = microblinkProxyUrl
@@ -176,6 +277,10 @@ struct BlinkIdDeserializationUtils {
         if let dataMatrixScanningEnabled = barcodeModuleDict["dataMatrixScanningEnabled"] as? Bool {
             barodeModuleSettings.dataMatrixScanningEnabled = dataMatrixScanningEnabled
         }
+
+        if let aztecScanningEnabled = barcodeModuleDict["aztecScanningEnabled"] as? Bool {
+            barodeModuleSettings.aztecScanningEnabled = aztecScanningEnabled
+        }
         
         if let ean13ScanningEnabled = barcodeModuleDict["ean13ScanningEnabled"] as? Bool {
             barodeModuleSettings.ean13ScanningEnabled = ean13ScanningEnabled
@@ -263,8 +368,8 @@ struct BlinkIdDeserializationUtils {
             documentCaptureSettings.imageWithPoorLightingRejected = imageWithPoorLightingRejected
         }
         
-        if let inputImageCropped = documentCaptureModuleDict["inputImageCropped"] as? Bool {
-            documentCaptureSettings.inputImageCropped = inputImageCropped
+        if let cropType = documentCaptureModuleDict["cropType"] as? String {
+            documentCaptureSettings.cropType = deserializeInputImageCropType(cropType)
         }
         
         if let inputImageReturnEnabled = documentCaptureModuleDict["inputImageReturnEnabled"] as? Bool {
@@ -290,7 +395,31 @@ struct BlinkIdDeserializationUtils {
         if let tiltSensitivityLevel = documentCaptureModuleDict["tiltSensitivityLevel"] as? String {
             documentCaptureSettings.tiltSensitivityLevel = deserializeSensitivityLevel(tiltSensitivityLevel)
         }
+
+        if let inputImageSelectionStrategy = documentCaptureModuleDict["inputImageSelectionStrategy"] as? String {
+            documentCaptureSettings.inputImageSelectionStrategy =
+                deserializeInputImageSelectionStrategy(inputImageSelectionStrategy)
+        }
         return documentCaptureSettings
+    }
+
+    static func deserializeInputImageCropType(_ value: String) -> InputImageCropType {
+        switch value {
+        case "cropped": return .cropped
+        case "unknown": return .unknown
+        case "not-cropped": return .notCropped
+        default: return .notCropped
+        }
+    }
+    
+    static func deserializeInputImageSelectionStrategy(_ value: String) -> InputImageSelectionStrategy {
+        switch value {
+        case "single-image": return .singleImage
+        case "optimize-for-speed": return .optimizeForSpeed
+        case "optimize-for-quality": return .optimizeForQuality
+        case "balanced": return .balanced
+        default: return .balanced
+        }
     }
     
     static func deserializeSensitivityLevel(_ sensitivityLevelRawValue: String) -> SensitivityLevel {
@@ -508,11 +637,26 @@ struct BlinkIdDeserializationUtils {
         let type = filteredClass["documentType"] as? String
         let region = filteredClass["region"] as? String
         
-        let countryMatches = country == nil || classInfo.country == Country(rawValue: country!)
-        let typeMatches = type == nil || classInfo.documentType == DocumentType(rawValue: type!)
-        let regionMatches = region == nil || classInfo.region == Region(rawValue: region!)
-        
-        return countryMatches && typeMatches && regionMatches
+        return (country == nil || classInfo.country?.countryId == parseCountryId(country!)) &&
+            (type == nil || classInfo.documentType?.documentTypeId == parseDocumentTypeId(type!)) &&
+            (region == nil || classInfo.region?.regionId == parseRegionId(region!))
+    }
+
+    private static func parseCountryId(_ value: String) -> CountryID? {
+        switch value {
+        case "schengenArea":
+            return .schengen_area
+        default:
+            return CountryID(rawValue: value)
+        }
+    }
+
+    private static func parseRegionId(_ value: String) -> RegionID? {
+        RegionID(rawValue: value)
+    }
+
+    private static func parseDocumentTypeId(_ value: String) -> DocumentTypeID? {
+        DocumentTypeID(rawValue: value)
     }
 
     static func toStringKeyedMap(_ value: Any?) -> [String: Any]? {

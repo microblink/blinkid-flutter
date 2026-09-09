@@ -48,19 +48,25 @@ class _MyAppState extends State<MyApp> {
 
   BlinkIdSdkSettings _buildSdkSettings() {
     final sdkSettings = BlinkIdSdkSettings(
-            licenseKey: sdkLicenseKey,
-            microblinkProxyUrl: _microblinkProxyUrl,
-            downloadResources: true
-          );
+      licenseKey: sdkLicenseKey,
+      microblinkProxyUrl: _microblinkProxyUrl,
+      resourcesConfig: ResourcesConfig(
+        download: true,
+        // Optional: override resource download timeouts (milliseconds).
+        // requestTimeout: RequestTimeout.all(30000),
+      ),
+      otaResourcesConfig: _modulesConfig.toOtaResourcesConfig(),
+    );
     return sdkSettings;
   }
 
-  BlinkIdSessionSettings _buildSessionSettings() =>
-      _modulesConfig.toSessionSettings();
+  BlinkIdSessionSettings _buildSessionSettings({bool forDirectApi = false}) =>
+      _modulesConfig.toSessionSettings(forDirectApi: forDirectApi);
 
-  void _logScanConfiguration(String action) {
-    final sessionSettings = _buildSessionSettings();
+  void _logScanConfiguration(String action, {bool forDirectApi = false}) {
+    final sessionSettings = _buildSessionSettings(forDirectApi: forDirectApi);
     final scanningSettings = sessionSettings.scanningSettings;
+    final otaResourcesConfig = _modulesConfig.toOtaResourcesConfig();
     debugPrint('[BlinkIdSample] $action');
     debugPrint('[BlinkIdSample] scanningMode: ${sessionSettings.scanningMode}');
     debugPrint(
@@ -82,6 +88,10 @@ class _MyAppState extends State<MyApp> {
     );
     debugPrint(
       '[BlinkIdSample] full sessionSettings JSON: ${jsonEncode(sessionSettings.toJson())}',
+    );
+    debugPrint(
+      '[BlinkIdSample] otaResourcesConfig: '
+      '${otaResourcesConfig != null ? jsonEncode(otaResourcesConfig.toJson()) : 'null'}',
     );
   }
 
@@ -159,7 +169,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> directApiMultiSideScan() async {
     try {
-      _logScanConfiguration('DirectAPI MultiSide');
+      _logScanConfiguration('DirectAPI MultiSide', forDirectApi: true);
       /// Get the front and the back side of the document with the pickMultiImage method
       /// First select the front and the then back side of the image
       final images = await ImagePicker().pickMultiImage();
@@ -172,7 +182,7 @@ class _MyAppState extends State<MyApp> {
       String backImageBase64 = base64Encode(await images[1].readAsBytes());
 
       final sdkSettings = _buildSdkSettings();
-      final sessionSettings = _buildSessionSettings();
+      final sessionSettings = _buildSessionSettings(forDirectApi: true);
 
       /// Call the 'performDirectApiScan' method and handle the results
       /// Check how the results are handled in the blinkid_result_builder.dart file
@@ -214,7 +224,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> directApiSingleSideScan() async {
     try {
-      _logScanConfiguration('DirectAPI SingleSide');
+      _logScanConfiguration('DirectAPI SingleSide', forDirectApi: true);
       /// Get either the front or the back side of the document with the pickImage method
       final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image == null) return;
@@ -223,7 +233,7 @@ class _MyAppState extends State<MyApp> {
       String imageBase64 = base64Encode(await image.readAsBytes());
 
       final sdkSettings = _buildSdkSettings();
-      final sessionSettings = _buildSessionSettings();
+      final sessionSettings = _buildSessionSettings(forDirectApi: true);
 
       /// Call the 'performDirectApiScan' method and handle the results
       /// Check how the results are handled in the blinkid_result_builder.dart file
@@ -259,6 +269,25 @@ class _MyAppState extends State<MyApp> {
           resetImages();
         });
       }
+    }
+  }
+
+  Future<void> refreshLicenseLease() async {
+    try {
+      await blinkIdPlugin.refreshLicenseLease();
+      if (!mounted) return;
+      setState(() {
+        resultString = "License lease refreshed";
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        if (error is PlatformException) {
+          resultString = "Error refreshing license lease: ${error.message}";
+        } else {
+          resultString = "Error refreshing license lease: $error";
+        }
+      });
     }
   }
 
@@ -479,6 +508,20 @@ class _MyAppState extends State<MyApp> {
                         });
                       },
                       child: Text("DirectAPI SingleSide"),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: Center(
+                      child: TextButton(
+                        onPressed: () => refreshLicenseLease(),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text("Refresh License Lease"),
+                      ),
                     ),
                   ),
                   Text(resultString),

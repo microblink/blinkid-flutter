@@ -79,6 +79,9 @@ object BlinkIdSerializationUtils {
         scanningResult?.race?.let {
             scanningResultDict["race"] = serializeStringResult(it)
         }
+        scanningResult?.ethnicity?.let {
+            scanningResultDict["ethnicity"] = serializeStringResult(it)
+        }
         scanningResult?.religion?.let {
             scanningResultDict["religion"] = serializeStringResult(it)
         }
@@ -280,20 +283,31 @@ object BlinkIdSerializationUtils {
 
     private fun serializeDocumentClassInfo(documentClassInfo: DocumentClassInfo): Map<String, Any?> {
         val documentClassInfoDict: MutableMap<String, Any?> = mutableMapOf()
-        // TODO: Align country/region/documentType strings with iOS (rawValue). Android uses
-        // enum.name with only the first character lowercased; values usually match but are not
-        // guaranteed identical for every enum. Prefer shared explicit string mappers on both platforms.
-        documentClassInfo.country?.name?.let {
-            documentClassInfoDict["country"] = it.replaceFirstChar { char -> char.lowercase() }
+        documentClassInfoDict["empty"] = isDocumentClassInfoEmpty(documentClassInfo)
+
+        documentClassInfo.country?.let { country ->
+            documentClassInfoDict["country"] = serializeClassInfoComponent(
+                id = country.id?.let { BlinkIdClassInfoIdMappings.serializeCountryId(it) },
+                rawValue = country.rawValue,
+            )
         }
-        documentClassInfo.region?.name?.let {
-            documentClassInfoDict["region"] = it.replaceFirstChar { char -> char.lowercase() }
+        documentClassInfo.region?.let { region ->
+            documentClassInfoDict["region"] = serializeClassInfoComponent(
+                id = region.id?.let { BlinkIdClassInfoIdMappings.serializeRegionId(it) },
+                rawValue = region.rawValue,
+            )
         }
-        documentClassInfo.type?.name?.let {
-            documentClassInfoDict["documentType"] = it.replaceFirstChar { char -> char.lowercase() }
+        documentClassInfo.documentType?.let { documentType ->
+            documentClassInfoDict["documentType"] = serializeClassInfoComponent(
+                id = documentType.id?.let { BlinkIdClassInfoIdMappings.serializeDocumentTypeId(it) },
+                rawValue = documentType.rawValue,
+            )
         }
         documentClassInfo.countryName?.let {
             documentClassInfoDict["countryName"] = it
+        }
+        documentClassInfo.isoNumericCountryCode?.let {
+            documentClassInfoDict["isoNumericCountryCode"] = it
         }
         documentClassInfo.isoAlpha2CountryCode?.let {
             documentClassInfoDict["isoAlpha2CountryCode"] = it
@@ -302,6 +316,21 @@ object BlinkIdSerializationUtils {
             documentClassInfoDict["isoAlpha3CountryCode"] = it
         }
         return documentClassInfoDict
+    }
+
+    private fun isDocumentClassInfoEmpty(documentClassInfo: DocumentClassInfo): Boolean {
+        val classIds = listOf(
+            documentClassInfo.country?.id?.name,
+            documentClassInfo.region?.id?.name,
+            documentClassInfo.documentType?.id?.name,
+        )
+        return classIds.any { it == null } || classIds.all { it == "None" }
+    }
+
+    private fun serializeClassInfoComponent(id: String?, rawValue: String): Map<String, Any> {
+        val component = mutableMapOf<String, Any>("rawValue" to rawValue)
+        id?.let { component["id"] = it }
+        return component
     }
 
     private fun serializeDataMatchResult(dataMatchResult: DataMatchResult): Map<String, Any?> {
@@ -583,6 +612,9 @@ object BlinkIdSerializationUtils {
         vizResult?.race?.let {
             vizResultDict["race"] = serializeStringResult(it)
         }
+        vizResult?.ethnicity?.let {
+            vizResultDict["ethnicity"] = serializeStringResult(it)
+        }
         vizResult?.religion?.let {
             vizResultDict["religion"] = serializeStringResult(it)
         }
@@ -769,6 +801,9 @@ object BlinkIdSerializationUtils {
         }
         parentInfo.lastName?.let {
             parentInfoDict["lastName"] = serializeStringResult(it)
+        }
+        parentInfo.fullName?.let {
+            parentInfoDict["fullName"] = serializeStringResult(it)
         }
         return parentInfoDict
     }
