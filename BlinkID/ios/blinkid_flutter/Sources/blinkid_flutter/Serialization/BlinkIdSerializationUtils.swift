@@ -90,6 +90,15 @@ class BlinkIdSerializationUtils {
             if let documentNumber = scanningResult.documentNumber {
                 scanningResultDict["documentNumber"] = serializeStringResult(documentNumber)
             }
+            if let vehicleNumber = scanningResult.vehicleNumber {
+                scanningResultDict["vehicleNumber"] = serializeStringResult(vehicleNumber)
+            }
+            if let passportNumber = scanningResult.passportNumber {
+                scanningResultDict["passportNumber"] = serializeStringResult(passportNumber)
+            }
+            if let trafficParticipantNumber = scanningResult.trafficParticipantNumber {
+                scanningResultDict["trafficParticipantNumber"] = serializeStringResult(trafficParticipantNumber)
+            }
             if let cardAccessNumber = scanningResult.cardAccessNumber {
                 scanningResultDict["cardAccessNumber"] = serializeStringResult(cardAccessNumber)
             }
@@ -271,6 +280,8 @@ class BlinkIdSerializationUtils {
         switch id {
         case .schengen_area:
             return "schengenArea"
+        case .britishVirginIslands:
+            return "britishVirginIslands"
         default:
             return id.rawValue
         }
@@ -281,7 +292,10 @@ class BlinkIdSerializationUtils {
     }
 
     private static func serializeDocumentTypeId(_ id: DocumentTypeID) -> String {
-        id.rawValue
+        if id == .byidCard {
+            return "byIdCard"
+        }
+        return id.rawValue
     }
 
     private static func serializeClassInfoComponent(id: String?, rawValue: String) -> [String: Any] {
@@ -633,28 +647,26 @@ class BlinkIdSerializationUtils {
         ]
     }
     
-    static func serializeMrzDocumentType(_ documentType: MRZDocumentType?) -> Int? {
-        // TODO: Return string values (e.g. "passport") instead of ints. See blinkid-react-native
-        // BlinkIdSerializationUtils.swift serializeMrzDocumentType.
+    static func serializeMrzDocumentType(_ documentType: MRZDocumentType?) -> String? {
         switch documentType {
         case .unknown:
-            return 0
+            return "unknown"
         case .identityCard:
-            return 1
+            return "identityCard"
         case .passport:
-            return 2
+            return "passport"
         case .visa:
-            return 3
+            return "visa"
         case .greenCard:
-            return 4
+            return "greenCard"
         case .mysPassIMM13P:
-            return 5
+            return "mysPassIMM13P"
         case .driverLicense:
-            return 6
+            return "driverLicense"
         case .internalTravelDocument:
-            return 7
+            return "internalTravelDocument"
         case .borderCrossingCard:
-            return 8
+            return "borderCrossingCard"
         case .none:
             return nil
         @unknown default:
@@ -749,6 +761,15 @@ class BlinkIdSerializationUtils {
             }
             if let documentNumber = vizResult.documentNumber {
                 vizResultDict["documentNumber"] = serializeStringResult(documentNumber)
+            }
+            if let vehicleNumber = vizResult.vehicleNumber {
+                vizResultDict["vehicleNumber"] = serializeStringResult(vehicleNumber)
+            }
+            if let passportNumber = vizResult.passportNumber {
+                vizResultDict["passportNumber"] = serializeStringResult(passportNumber)
+            }
+            if let trafficParticipantNumber = vizResult.trafficParticipantNumber {
+                vizResultDict["trafficParticipantNumber"] = serializeStringResult(trafficParticipantNumber)
             }
             if let cardAccessNumber = vizResult.cardAccessNumber {
                 vizResultDict["cardAccessNumber"] = serializeStringResult(cardAccessNumber)
@@ -864,14 +885,12 @@ class BlinkIdSerializationUtils {
         ]
     }
     
-    static func serializeScanningSide(_ side: ScanningSide?) -> Int? {
-        // TODO: Return "first"/"second" strings instead of 0/1. See blinkid-react-native
-        // BlinkIdSerializationUtils.swift serializeScanningSide.
+    static func serializeScanningSide(_ side: ScanningSide?) -> String? {
         switch side {
         case .first:
-            return 0
+            return "first"
         case .second:
-            return 1
+            return "second"
         case .none:
             return nil
         @unknown default:

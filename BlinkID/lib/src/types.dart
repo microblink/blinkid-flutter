@@ -606,6 +606,74 @@ class DocumentNumberRedactionSettings {
 
 /// BlinkID enums
 
+/// Session settings factory preset for [BlinkIdSessionSettings].
+enum SessionPreset {
+  /// Live document scanning from a camera stream.
+  @JsonValue("documentVideo")
+  documentVideo,
+
+  /// Document scanning from a single photo or gallery image.
+  @JsonValue("documentPhoto")
+  documentPhoto,
+
+  /// Standalone barcode scanning without document detection.
+  @JsonValue("standaloneBarcode")
+  standaloneBarcode,
+
+  /// BlinkID Verify live capture (face image, input and barcode images, no result aggregation).
+  @JsonValue("verifyCapture")
+  verifyCapture,
+}
+
+/// Document scanning scenario for session presets.
+enum DocumentScenario {
+  /// Default module topology for general ID scanning.
+  @JsonValue("general")
+  general,
+
+  /// Automatic scan with mandatory MRZ; VIZ and barcode modules remain enabled.
+  @JsonValue("mrzMandatory")
+  mrzMandatory,
+
+  /// MRZ extraction only; VIZ and barcode disabled; single-side scan with mandatory MRZ.
+  @JsonValue("mrzOnly")
+  mrzOnly,
+
+  /// Barcode extraction from a detected document; VIZ and MRZ disabled; mandatory barcode.
+  @JsonValue("barcodeOnly")
+  barcodeOnly,
+}
+
+/// Video (camera) quality profile for [DocumentVideoUseCase].
+enum VideoQualityProfile {
+  @JsonValue("balanced")
+  balanced,
+  @JsonValue("highSpeed")
+  highSpeed,
+  @JsonValue("highAccuracy")
+  highAccuracy,
+  @JsonValue("permissive")
+  permissive,
+}
+
+/// Capture environment for [DocumentVideoUseCase].
+enum VideoCaptureEnvironment {
+  @JsonValue("handHeld")
+  handHeld,
+  @JsonValue("stationary")
+  stationary,
+}
+
+/// Photo (single image) quality profile for [DocumentPhotoUseCase].
+enum PhotoQualityProfile {
+  @JsonValue("balanced")
+  balanced,
+  @JsonValue("highAccuracy")
+  highAccuracy,
+  @JsonValue("permissive")
+  permissive,
+}
+
 /// Represents the mode of document scanning.
 ///
 /// This enum class defines whether the scanning process is limited to a single
@@ -1209,8 +1277,8 @@ enum CountryID {
   vanuatu,
   @JsonValue("vaticanCity")
   vaticanCity,
-  @JsonValue("virginIslandsBritish")
-  virginIslandsBritish,
+  @JsonValue("britishVirginIslands")
+  britishVirginIslands,
   @JsonValue("virginIslandsOfTheUnitedStates")
   virginIslandsOfTheUnitedStates,
   @JsonValue("wallisAndFutuna")
@@ -1313,6 +1381,8 @@ enum RegionID {
   newSouthWales,
   @JsonValue("newYork")
   newYork,
+  @JsonValue("northernIreland")
+  northernIreland,
   @JsonValue("northernTerritory")
   northernTerritory,
   @JsonValue("northCarolina")
@@ -1721,6 +1791,14 @@ enum DocumentTypeID {
   policeId,
   @JsonValue("originCard")
   originCard,
+  @JsonValue("specifiedResidenceCard")
+  specifiedResidenceCard,
+  @JsonValue("goldenCard")
+  goldenCard,
+  @JsonValue("vehicleOwnershipCertificate")
+  vehicleOwnershipCertificate,
+  @JsonValue("byIdCard")
+  byIdCard,
 }
 
 /// Represents all possible field types that can be extracted from the document.
@@ -1869,6 +1947,12 @@ enum FieldType {
   husbandName,
   @JsonValue("cardAccessNumber")
   cardAccessNumber,
+  @JsonValue("vehicleNumber")
+  vehicleNumber,
+  @JsonValue("passportNumber")
+  passportNumber,
+  @JsonValue("trafficParticipantNumber")
+  trafficParticipantNumber,
   @JsonValue("parentFullName")
   parentFullName,
   @JsonValue("ethnicity")
@@ -2189,42 +2273,26 @@ class Location {
 }
 
 /// Side of the document on which the specific result is located.
-// TODO: Native SDK returns ScanningSide (first/second), not front/back. Remove
-// DocumentSide, use ScanningSide here, and parse string values from native
-// (see blinkid-react-native BlinkID/src/types.ts).
 class Side {
-  /// Document side of the result extracted from the OCR in the latin alphabet.
-  DocumentSide? latin;
+  /// Scanning side of the result extracted from the OCR in the latin alphabet.
+  ScanningSide? latin;
 
-  /// Document side of the result extracted from the OCR in the arabic alphabet.
-  DocumentSide? arabic;
+  /// Scanning side of the result extracted from the OCR in the arabic alphabet.
+  ScanningSide? arabic;
 
-  /// Document side of the result extracted from the OCR in the cyrillic alphabet.
-  DocumentSide? cyrillic;
+  /// Scanning side of the result extracted from the OCR in the cyrillic alphabet.
+  ScanningSide? cyrillic;
 
-  /// Document side of the result extracted from the OCR in the cyrillic alphabet.
-  DocumentSide? greek;
+  /// Scanning side of the result extracted from the OCR in the greek alphabet.
+  ScanningSide? greek;
 
   /// Side of the document on which the specific result is located.
   Side(Map<String, dynamic> nativeSide) {
-    latin = enumFromValue(DocumentSide.values, nativeSide['latin']);
-    arabic = enumFromValue(DocumentSide.values, nativeSide['arabic']);
-    cyrillic = enumFromValue(DocumentSide.values, nativeSide['cyrillic']);
-    greek = enumFromValue(DocumentSide.values, nativeSide['greek']);
+    latin = enumFromValue(ScanningSide.values, nativeSide['latin']);
+    arabic = enumFromValue(ScanningSide.values, nativeSide['arabic']);
+    cyrillic = enumFromValue(ScanningSide.values, nativeSide['cyrillic']);
+    greek = enumFromValue(ScanningSide.values, nativeSide['greek']);
   }
-}
-
-/// Define document side where the document field is located
-// TODO: Remove DocumentSide; StringResult.side uses ScanningSide in blinkid-core.
-enum DocumentSide {
-  ///The field was not detected
-  none,
-
-  ///The field is located on the front side of the document
-  front,
-
-  ///The field is located on the back side of the document
-  back,
 }
 
 /// Represents the result of the date extraction.
@@ -2607,6 +2675,15 @@ class VizResult {
   /// The document number.
   StringResult? documentNumber;
 
+  /// The vehicle number.
+  StringResult? vehicleNumber;
+
+  /// The passport number.
+  StringResult? passportNumber;
+
+  /// The traffic participant number.
+  StringResult? trafficParticipantNumber;
+
   /// The card access number.
   StringResult? cardAccessNumber;
 
@@ -2767,6 +2844,12 @@ class VizResult {
     stateName = createStringResult(nativeVizResult, "stateName");
     dateOfExpiryPermanent = nativeVizResult["dateOfExpiryPermanent"];
     documentNumber = createStringResult(nativeVizResult, 'documentNumber');
+    vehicleNumber = createStringResult(nativeVizResult, 'vehicleNumber');
+    passportNumber = createStringResult(nativeVizResult, 'passportNumber');
+    trafficParticipantNumber = createStringResult(
+      nativeVizResult,
+      'trafficParticipantNumber',
+    );
     cardAccessNumber = createStringResult(nativeVizResult, "cardAccessNumber");
     personalIdNumber = createStringResult(nativeVizResult, 'personalIdNumber');
     documentAdditionalNumber = createStringResult(
@@ -2936,8 +3019,6 @@ class MrzResult {
 
   /// Represents the result of the MRZ recognition.
   MrzResult(Map<String, dynamic> nativeMRZResult) {
-    // TODO: Serialize documentType as string on native side (e.g. "passport") instead
-    // of int ordinal; update enumFromValue usage accordingly.
     documentType = enumFromValue(
       MRZDocumentType.values,
       nativeMRZResult["documentType"],
@@ -2964,7 +3045,7 @@ class MrzResult {
     opt1 = nativeMRZResult['opt1'];
     opt2 = nativeMRZResult['opt2'];
     rawMRZString = nativeMRZResult['rawMRZString'];
-    verified = nativeMRZResult['mrzVerified'];
+    verified = nativeMRZResult['verified'];
     sanitizedOpt1 = nativeMRZResult['sanitizedOpt1'];
     sanitizedOpt2 = nativeMRZResult['sanitizedOpt2'];
     sanitizedNationality = nativeMRZResult['sanitizedNationality'];

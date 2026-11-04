@@ -20,7 +20,7 @@ if [ "$IS_LOCAL_BUILD" = true ]; then
   echo "Using blinkid_flutter from this repo instead from flutter pub"
 else
   # add blinkid_flutter dependency to pubspec.yaml
-  perl -i~ -pe "BEGIN{$/ = undef;} s/dependencies:\n  flutter:\n    sdk: flutter/dependencies:\n  flutter:\n    sdk: flutter\n  blinkid_flutter: ^8001.0.0 \n  image_picker: 1.1.2/" pubspec.yaml
+  perl -i~ -pe "BEGIN{$/ = undef;} s/dependencies:\n  flutter:\n    sdk: flutter/dependencies:\n  flutter:\n    sdk: flutter\n  blinkid_flutter: ^8002.0.0 \n  image_picker: 1.1.2/" pubspec.yaml
   echo "Using blinkid_flutter from flutter pub"
 fi
 
@@ -40,6 +40,9 @@ sed -i '' 's/id("com.android.application") version "[0-9.]*"/id("com.android.app
 sed -i '' 's|gradle-[0-9.]*-all.zip|gradle-9.3.1-all.zip|' gradle/wrapper/gradle-wrapper.properties
 # minSdk
 sed -i '' 's/minSdk = flutter\.minSdkVersion/minSdk = 24/' app/build.gradle.kts
+# compileSdk / targetSdk
+sed -i '' 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 37/' app/build.gradle.kts
+sed -i '' 's/targetSdk = flutter\.targetSdkVersion/targetSdk = 37/' app/build.gradle.kts
 
 # -------
 

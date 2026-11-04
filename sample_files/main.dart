@@ -68,7 +68,14 @@ class _MyAppState extends State<MyApp> {
     final scanningSettings = sessionSettings.scanningSettings;
     final otaResourcesConfig = _modulesConfig.toOtaResourcesConfig();
     debugPrint('[BlinkIdSample] $action');
+    debugPrint(
+      '[BlinkIdSample] sessionPresetMode: ${_modulesConfig.sessionPresetMode}',
+    );
     debugPrint('[BlinkIdSample] scanningMode: ${sessionSettings.scanningMode}');
+    debugPrint('[BlinkIdSample] passportOnly: ${_modulesConfig.passportOnly}');
+    debugPrint(
+      '[BlinkIdSample] allowScanSound: ${_modulesConfig.allowScanSound}',
+    );
     debugPrint(
       '[BlinkIdSample] stepTimeoutDuration: ${sessionSettings.stepTimeoutDuration}, '
       'inactivityTimeoutDuration: ${sessionSettings.inactivityTimeoutDuration}',
@@ -87,7 +94,7 @@ class _MyAppState extends State<MyApp> {
       '[BlinkIdSample] scanningSettings JSON: ${jsonEncode(scanningSettings.toJson())}',
     );
     debugPrint(
-      '[BlinkIdSample] full sessionSettings JSON: ${jsonEncode(sessionSettings.toJson())}',
+      '[BlinkIdSample] session platform map: ${jsonEncode(sessionSettings.toPlatformMap())}',
     );
     debugPrint(
       '[BlinkIdSample] otaResourcesConfig: '

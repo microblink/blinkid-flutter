@@ -16,6 +16,7 @@ import com.microblink.blinkid.core.result.barcode.BarcodeData
 import com.microblink.blinkid.core.result.barcode.BarcodeResult
 import com.microblink.blinkid.core.result.barcode.BarcodeType
 import com.microblink.blinkid.core.result.classinfo.DocumentClassInfo
+import com.microblink.blinkid.core.result.mrz.DocumentType
 import com.microblink.blinkid.core.result.mrz.MrzResult
 import com.microblink.blinkid.core.result.viz.VizResult
 import com.microblink.blinkid.core.session.BlinkIdScanningResult
@@ -108,6 +109,15 @@ object BlinkIdSerializationUtils {
         }
         scanningResult?.documentNumber?.let {
             scanningResultDict["documentNumber"] = serializeStringResult(it)
+        }
+        scanningResult?.vehicleNumber?.let {
+            scanningResultDict["vehicleNumber"] = serializeStringResult(it)
+        }
+        scanningResult?.passportNumber?.let {
+            scanningResultDict["passportNumber"] = serializeStringResult(it)
+        }
+        scanningResult?.trafficParticipantNumber?.let {
+            scanningResultDict["trafficParticipantNumber"] = serializeStringResult(it)
         }
         scanningResult?.cardAccessNumber?.let {
             scanningResultDict["cardAccessNumber"] = serializeStringResult(it)
@@ -390,19 +400,17 @@ object BlinkIdSerializationUtils {
         }
 
         val sideDict: MutableMap<String, Any?> = mutableMapOf()
-        // TODO: Serialize ScanningSide as "first"/"second" strings (not ordinals).
-        // See blinkid-react-native BlinkIdSerializationUtilities.kt.
         stringResult.side(AlphabetType.Latin)?.let {
-            sideDict["latin"] = it.ordinal
+            sideDict["latin"] = serializeScanningSide(it)
         }
         stringResult.side(AlphabetType.Arabic)?.let {
-            sideDict["arabic"] = it.ordinal
+            sideDict["arabic"] = serializeScanningSide(it)
         }
         stringResult.side(AlphabetType.Cyrillic)?.let {
-            sideDict["cyrillic"] = it.ordinal
+            sideDict["cyrillic"] = serializeScanningSide(it)
         }
         stringResult.side(AlphabetType.Greek)?.let {
-            sideDict["greek"] = it.ordinal
+            sideDict["greek"] = serializeScanningSide(it)
         }
         stringResultDict["side"] = sideDict
 
@@ -516,9 +524,7 @@ object BlinkIdSerializationUtils {
     private fun serializeBarcodeData(barcodeData: BarcodeData?): Map<String, Any?> {
         return mapOf(
             "barcodeType" to serializeBarcodeType(barcodeData?.barcodeType),
-            // TODO: Encode rawData as Base64 (Base64.NO_WRAP), not byteArray.toString().
-            // iOS bridge uses base64EncodedString(); see blinkid-react-native encodeBase64Bytes().
-            "rawData" to barcodeData?.rawData.toString(),
+            "rawData" to encodeBase64Bytes(barcodeData?.rawData),
             "stringData" to barcodeData?.stringData,
             "uncertain" to barcodeData?.uncertain
         )
@@ -559,8 +565,7 @@ object BlinkIdSerializationUtils {
             "verified" to mrzResult?.verified,
             "dateOfBirth" to serializeDateResult(mrzResult?.dateOfBirth),
             "dateOfExpiry" to serializeDateResult(mrzResult?.dateOfExpiry),
-            // TODO: Serialize as MRZ document type string (e.g. "passport"), not ordinal.
-            "documentType" to mrzResult?.documentType?.ordinal,
+            "documentType" to serializeMrzDocumentType(mrzResult?.documentType),
             "sanitizedOpt1" to mrzResult?.sanitizedOpt1,
             "sanitizedOpt2" to mrzResult?.sanitizedOpt2,
             "sanitizedNationality" to mrzResult?.sanitizedNationality,
@@ -659,6 +664,15 @@ object BlinkIdSerializationUtils {
         }
         vizResult?.documentNumber?.let {
             vizResultDict["documentNumber"] = serializeStringResult(it)
+        }
+        vizResult?.vehicleNumber?.let {
+            vizResultDict["vehicleNumber"] = serializeStringResult(it)
+        }
+        vizResult?.passportNumber?.let {
+            vizResultDict["passportNumber"] = serializeStringResult(it)
+        }
+        vizResult?.trafficParticipantNumber?.let {
+            vizResultDict["trafficParticipantNumber"] = serializeStringResult(it)
         }
         vizResult?.cardAccessNumber?.let {
             vizResultDict["cardAccessNumber"] = serializeStringResult(it)
@@ -777,10 +791,31 @@ object BlinkIdSerializationUtils {
             detailedCroppedImageResultDict["location"] = serializeLocation(it)
         }
         detailedCroppedImageResult?.side?.let {
-            // TODO: Serialize as "first"/"second" string, not ordinal.
-            detailedCroppedImageResultDict["side"] = it.ordinal
+            detailedCroppedImageResultDict["side"] = serializeScanningSide(it)
         }
         return detailedCroppedImageResultDict
+    }
+
+    private fun serializeScanningSide(side: ScanningSide): String {
+        return when (side) {
+            ScanningSide.First -> "first"
+            ScanningSide.Second -> "second"
+        }
+    }
+
+    private fun serializeMrzDocumentType(documentType: DocumentType?): String? {
+        return when (documentType) {
+            DocumentType.Unknown -> "unknown"
+            DocumentType.IdentityCard -> "identityCard"
+            DocumentType.Passport -> "passport"
+            DocumentType.Visa -> "visa"
+            DocumentType.GreenCard -> "greenCard"
+            DocumentType.MysPassIMM13P -> "mysPassIMM13P"
+            DocumentType.DriverLicense -> "driverLicense"
+            DocumentType.InternalTravelDocument -> "internalTravelDocument"
+            DocumentType.BorderCrossingCard -> "borderCrossingCard"
+            null -> null
+        }
     }
 
     private fun serializeBarcodeExtendedElements(barcodeExtendedElements: Array<BarcodeElement>?): Map<String, Any?> {
@@ -813,6 +848,12 @@ object BlinkIdSerializationUtils {
             is StringResult -> serializeStringResult(value)
             is String -> value
             else -> null
+        }
+    }
+
+    private fun encodeBase64Bytes(data: ByteArray?): String? {
+        return data?.let {
+            Base64.encodeToString(it, Base64.NO_WRAP)
         }
     }
 

@@ -22,6 +22,12 @@ class BlinkIdResultBuilder {
           result.documentAdditionalNumber,
           "Additional document number",
         ) +
+        buildResult(result.vehicleNumber, "Vehicle number") +
+        buildResult(result.passportNumber, "Passport number") +
+        buildResult(
+          result.trafficParticipantNumber,
+          "Traffic participant number",
+        ) +
         buildResult(result.sex, "Sex") +
         buildResult(result.issuingAuthority, "Issuing authority") +
         buildResult(result.nationality, "Nationality") +
@@ -165,6 +171,12 @@ class BlinkIdResultBuilder {
         buildDateResult(result.dateOfExpiry, "Date of expiry") +
         buildDateResult(result.dateOfIssue, "Date of issue") +
         buildResult(result.documentNumber, "Document number") +
+        buildResult(result.vehicleNumber, "Vehicle number") +
+        buildResult(result.passportNumber, "Passport number") +
+        buildResult(
+          result.trafficParticipantNumber,
+          "Traffic participant number",
+        ) +
         buildResult(result.issuingAuthority, "Issuing authority") +
         buildResult(result.documentSubtype, "Document subtype") +
         buildResult(

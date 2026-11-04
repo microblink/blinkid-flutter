@@ -61,7 +61,7 @@ class MethodChannelBlinkIdFlutter extends BlinkIdFlutterPlatform {
     ClassFilter? classFilter,
     RedactionSettingsResolver? redactionSettingsResolver,
   }) async {
-    final sessionPayload = jsonDecode(jsonEncode(blinkIdSessionSettings));
+    final sessionPayload = blinkIdSessionSettings.toPlatformMap();
     debugPrint(
       '[BlinkIdFlutter] performScan sessionSettings: ${jsonEncode(sessionPayload)}',
     );
@@ -105,7 +105,7 @@ class MethodChannelBlinkIdFlutter extends BlinkIdFlutterPlatform {
     required String firstImage,
     String? secondImage,
   }) async {
-    final sessionPayload = jsonDecode(jsonEncode(blinkIdSessionSettings));
+    final sessionPayload = blinkIdSessionSettings.toPlatformMap();
     debugPrint(
       '[BlinkIdFlutter] performDirectApiScan sessionSettings: ${jsonEncode(sessionPayload)}',
     );

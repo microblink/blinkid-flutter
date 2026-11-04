@@ -26,12 +26,15 @@ class ModuleSettingsPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Disabled modules are sent as null (not supported). '
-          'Settings apply to all scan actions below.',
+          'With Manual, disabled modules are sent as null. '
+          'Choosing a preset turns every module off so only the preset is sent. '
+          'Turn a module on to replace that module on the preset.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: 12),
+        _SessionPresetCard(config: config, onChanged: onChanged),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -42,6 +45,10 @@ class ModuleSettingsPanel extends StatelessWidget {
               labelText: 'Scanning Mode',
               isDense: true,
               border: const OutlineInputBorder(),
+              helperText:
+                  config.sessionPresetMode != SampleSessionPresetMode.manual
+                  ? 'Not sent while a preset is selected; the preset defines scanning mode.'
+                  : null,
             ),
             items: ScanningMode.values
                 .map(
@@ -178,7 +185,7 @@ class _BarcodeModuleCard extends StatelessWidget {
     final b = config.barcode;
     return SampleModuleCard(
       title: 'Barcode',
-      subtitle: config.barcodeEnabled ? 'Enabled' : 'Disabled (null)',
+      subtitle: config.moduleToggleSubtitle(config.barcodeEnabled),
       enabled: config.barcodeEnabled,
       onEnabledChanged: (v) {
         config.barcodeEnabled = v;
@@ -292,7 +299,7 @@ class _DocumentCaptureModuleCard extends StatelessWidget {
     final d = config.documentCapture;
     return SampleModuleCard(
       title: 'Document capture',
-      subtitle: config.documentCaptureEnabled ? 'Enabled' : 'Disabled (null)',
+      subtitle: config.moduleToggleSubtitle(config.documentCaptureEnabled),
       enabled: config.documentCaptureEnabled,
       onEnabledChanged: (v) {
         config.documentCaptureEnabled = v;
@@ -438,7 +445,7 @@ class _MrzModuleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SampleModuleCard(
       title: 'MRZ',
-      subtitle: config.mrzEnabled ? 'Enabled' : 'Disabled (null)',
+      subtitle: config.moduleToggleSubtitle(config.mrzEnabled),
       enabled: config.mrzEnabled,
       onEnabledChanged: (v) {
         config.mrzEnabled = v;
@@ -475,7 +482,7 @@ class _VizModuleCard extends StatelessWidget {
     final v = config.viz;
     return SampleModuleCard(
       title: 'VIZ',
-      subtitle: config.vizEnabled ? 'Enabled' : 'Disabled (null)',
+      subtitle: config.moduleToggleSubtitle(config.vizEnabled),
       enabled: config.vizEnabled,
       onEnabledChanged: (v) {
         config.vizEnabled = v;
@@ -506,6 +513,203 @@ class _VizModuleCard extends StatelessWidget {
           onChanged: (val) => _update((s) => s.resultAggregationEnabled = val),
         ),
       ],
+    );
+  }
+}
+
+String _sampleSessionPresetModeLabel(SampleSessionPresetMode mode) {
+  switch (mode) {
+    case SampleSessionPresetMode.manual:
+      return 'Manual (module settings)';
+    case SampleSessionPresetMode.documentVideo:
+      return 'Document video';
+    case SampleSessionPresetMode.documentPhoto:
+      return 'Document photo';
+    case SampleSessionPresetMode.standaloneBarcode:
+      return 'Standalone barcode';
+    case SampleSessionPresetMode.verifyCapture:
+      return 'Verify capture';
+  }
+}
+
+class _SessionPresetCard extends StatelessWidget {
+  final ScanningModulesConfig config;
+  final VoidCallback onChanged;
+
+  const _SessionPresetCard({required this.config, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final preset = config.sessionPresetMode;
+    final showVideoOptions = preset == SampleSessionPresetMode.documentVideo;
+    final showPhotoOptions = preset == SampleSessionPresetMode.documentPhoto;
+    final usesPreset = preset != SampleSessionPresetMode.manual;
+
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Session preset',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              usesPreset
+                  ? 'Native factory preset. Modules are off so only the preset is sent. '
+                      'Turn a module on to replace that module on the preset.'
+                  : 'No preset — module settings define the full scanning configuration.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: DropdownButtonFormField<SampleSessionPresetMode>(
+                key: ValueKey('session-preset-$preset'),
+                initialValue: preset,
+                decoration: const InputDecoration(
+                  labelText: 'Preset',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                items: sampleSessionPresetModes
+                    .map(
+                      (mode) => DropdownMenuItem(
+                        value: mode,
+                        child: Text(_sampleSessionPresetModeLabel(mode)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    config.applySessionPresetMode(value);
+                    onChanged();
+                  }
+                },
+              ),
+            ),
+            if (showVideoOptions || showPhotoOptions) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: DropdownButtonFormField<DocumentScenario>(
+                  key: ValueKey('document-scenario-${config.documentScenario}'),
+                  initialValue: config.documentScenario,
+                  decoration: const InputDecoration(
+                    labelText: 'Document scenario',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  items: documentScenarios
+                      .map(
+                        (scenario) => DropdownMenuItem(
+                          value: scenario,
+                          child: Text(scenario.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      config.documentScenario = value;
+                      onChanged();
+                    }
+                  },
+                ),
+              ),
+            ],
+            if (showVideoOptions) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: DropdownButtonFormField<VideoQualityProfile>(
+                  key: ValueKey('video-quality-${config.videoQuality}'),
+                  initialValue: config.videoQuality,
+                  decoration: const InputDecoration(
+                    labelText: 'Video quality',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  items: videoQualityProfiles
+                      .map(
+                        (quality) => DropdownMenuItem(
+                          value: quality,
+                          child: Text(quality.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      config.videoQuality = value;
+                      onChanged();
+                    }
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: DropdownButtonFormField<VideoCaptureEnvironment>(
+                  key: ValueKey(
+                    'video-capture-env-${config.videoCaptureEnvironment}',
+                  ),
+                  initialValue: config.videoCaptureEnvironment,
+                  decoration: const InputDecoration(
+                    labelText: 'Capture environment',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  items: videoCaptureEnvironments
+                      .map(
+                        (env) => DropdownMenuItem(
+                          value: env,
+                          child: Text(env.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      config.videoCaptureEnvironment = value;
+                      onChanged();
+                    }
+                  },
+                ),
+              ),
+            ],
+            if (showPhotoOptions)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: DropdownButtonFormField<PhotoQualityProfile>(
+                  key: ValueKey('photo-quality-${config.photoQuality}'),
+                  initialValue: config.photoQuality,
+                  decoration: const InputDecoration(
+                    labelText: 'Photo quality',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  items: photoQualityProfiles
+                      .map(
+                        (quality) => DropdownMenuItem(
+                          value: quality,
+                          child: Text(quality.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      config.photoQuality = value;
+                      onChanged();
+                    }
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -605,6 +809,24 @@ class _UxSettingsCard extends StatelessWidget {
               value: config.showOnboardingDialog,
               onChanged: (v) {
                 config.showOnboardingDialog = v;
+                onChanged();
+              },
+            ),
+            SampleBoolSettingTile(
+              title: 'Allow scan sound',
+              subtitle: 'Play sound when a document is scanned',
+              value: config.allowScanSound,
+              onChanged: (v) {
+                config.allowScanSound = v;
+                onChanged();
+              },
+            ),
+            SampleBoolSettingTile(
+              title: 'Passport only',
+              subtitle: 'Limit UX flow to passport documents',
+              value: config.passportOnly,
+              onChanged: (v) {
+                config.passportOnly = v;
                 onChanged();
               },
             ),

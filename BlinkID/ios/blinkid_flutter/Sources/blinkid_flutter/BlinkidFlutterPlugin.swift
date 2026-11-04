@@ -145,8 +145,6 @@ public class BlinkIdFlutterPlugin: NSObject, FlutterPlugin {
                   let sessionSettings = BlinkIdDeserializationUtils.sanitizeDictionary(sessionSettingsRaw) else {
                 throw BlinkIdFlutterError.incorrectArgument("BlinkID session settings")
             }
-            print("[BlinkIdFlutter] performScan received blinkIdSessionSettings=\(sessionSettings)")
-            
             let uxSettings = BlinkIdDeserializationUtils.deserializeBlinkIdUxScanningSettings(cleanArguments["blinkIdScanningUxSettings"] as? [String: Any])
             
             classInfoFilterDict = cleanArguments["blinkIdClassFilter"] as? [String: Any]
@@ -154,10 +152,13 @@ public class BlinkIdFlutterPlugin: NSObject, FlutterPlugin {
                 cleanArguments["blinkIdRedactionSettingsResolver"]
             )
             print("[BlinkIdFlutter] performScan received blinkIdRedactionSettingsResolver=\(String(describing: redactionSettingsResolverDict))")
+            let scanningUxSettingsDict = cleanArguments["blinkIdScanningUxSettings"] as? [String: Any]
+            let passportOnly = scanningUxSettingsDict?["passportOnly"] as? Bool ?? false
             let analyzer = try await BlinkIDAnalyzer(
                 sdk: blinkIdSdk,
                 blinkIdSessionSettings: BlinkIdDeserializationUtils.deserializeBlinkIdSessionSettings(sessionSettings),
                 eventStream: BlinkIDEventStream(),
+                passportOnly: passportOnly,
                 classFilter: self,
                 redactionSettingsResolver: self
             )

@@ -136,19 +136,76 @@ class BlinkIdSdkSettings {
   Map<String, dynamic> toJson() => _$BlinkIdSdkSettingsToJson(this);
 }
 
+/// Use case options for [SessionPreset.documentVideo].
+@JsonSerializable()
+class DocumentVideoUseCase {
+  /// Module topology and mandatory presence rules for the scan.
+  DocumentScenario scenario;
+
+  /// Speed vs. accuracy tuning for frame selection and quality thresholds.
+  VideoQualityProfile quality;
+
+  /// Hand-held mobile capture vs. stationary capture.
+  VideoCaptureEnvironment captureEnvironment;
+
+  DocumentVideoUseCase({
+    this.scenario = DocumentScenario.general,
+    this.quality = VideoQualityProfile.balanced,
+    this.captureEnvironment = VideoCaptureEnvironment.handHeld,
+  });
+
+  factory DocumentVideoUseCase.fromJson(Map<String, dynamic> json) =>
+      _$DocumentVideoUseCaseFromJson(json);
+  Map<String, dynamic> toJson() => _$DocumentVideoUseCaseToJson(this);
+}
+
+/// Use case options for [SessionPreset.documentPhoto].
+@JsonSerializable()
+class DocumentPhotoUseCase {
+  /// Module topology and mandatory presence rules for the scan.
+  DocumentScenario scenario;
+
+  /// Quality thresholds for single-image extraction.
+  PhotoQualityProfile quality;
+
+  DocumentPhotoUseCase({
+    this.scenario = DocumentScenario.general,
+    this.quality = PhotoQualityProfile.balanced,
+  });
+
+  factory DocumentPhotoUseCase.fromJson(Map<String, dynamic> json) =>
+      _$DocumentPhotoUseCaseFromJson(json);
+  Map<String, dynamic> toJson() => _$DocumentPhotoUseCaseToJson(this);
+}
+
 /// Represents the configuration settings for a scanning session.
 ///
 /// This class holds the settings related to the resources initialization,
 /// scanning mode, and specific scanning configurations that define how the scanning
 /// session should behave.
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class BlinkIdSessionSettings {
+  /// Builds session settings from a native preset factory instead of manual module tuning.
+  ///
+  /// When set, [documentVideoUseCase] or [documentPhotoUseCase] apply to
+  /// [SessionPreset.documentVideo] and [SessionPreset.documentPhoto] respectively.
+  /// [scanningMode] overrides a preset only when set (non-null). [scanningSettings] merges
+  /// onto a preset: only keys sent to the native bridge are applied; omit overrides to
+  /// keep preset defaults.
+  SessionPreset? sessionPreset;
+
+  /// Use case options for [SessionPreset.documentVideo].
+  DocumentVideoUseCase? documentVideoUseCase;
+
+  /// Use case options for [SessionPreset.documentPhoto].
+  DocumentPhotoUseCase? documentPhotoUseCase;
+
   /// The scanning mode to be used during the scanning session.
   ///
-  /// Specifies whether the scanning is for a single side of a document or multiple
-  /// sides, as defined in [ScanningMode]. The default is set to `automatic`, which
-  /// automatically determines the number of sides to scan.
-  ScanningMode scanningMode = ScanningMode.automatic;
+  /// When [sessionPreset] is set, leave null to keep the preset's scanning mode.
+  /// For manual (non-preset) sessions, null is treated as [ScanningMode.automatic] on
+  /// the native side.
+  ScanningMode? scanningMode;
 
   /// The specific scanning settings for the scanning session.
   ///
@@ -171,7 +228,10 @@ class BlinkIdSessionSettings {
   /// scanning mode, and specific scanning configurations that define how the scanning
   /// session should behave.
   BlinkIdSessionSettings({
-    this.scanningMode = ScanningMode.automatic,
+    this.sessionPreset,
+    this.documentVideoUseCase,
+    this.documentPhotoUseCase,
+    this.scanningMode,
     BlinkIdScanningSettings? scanningSettings,
     this.stepTimeoutDuration = 60000,
     this.inactivityTimeoutDuration = 10000,
@@ -180,6 +240,50 @@ class BlinkIdSessionSettings {
   factory BlinkIdSessionSettings.fromJson(Map<String, dynamic> json) =>
       _$BlinkIdSessionSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$BlinkIdSessionSettingsToJson(this);
+
+  /// Session settings map for the native method channel.
+  ///
+  /// Omits default [scanningSettings] and unset [scanningMode] when using a preset
+  /// factory so native merge logic does not clear preset module defaults.
+  Map<String, dynamic> toPlatformMap() {
+    final map = <String, dynamic>{
+      'stepTimeoutDuration': stepTimeoutDuration,
+      'inactivityTimeoutDuration': inactivityTimeoutDuration,
+    };
+
+    if (sessionPreset != null) {
+      map['sessionPreset'] = _$SessionPresetEnumMap[sessionPreset]!;
+    }
+    if (documentVideoUseCase != null) {
+      map['documentVideoUseCase'] = documentVideoUseCase!.toJson();
+    }
+    if (documentPhotoUseCase != null) {
+      map['documentPhotoUseCase'] = documentPhotoUseCase!.toJson();
+    }
+
+    if (_usesSessionPresetFactory(sessionPreset)) {
+      if (scanningMode != null) {
+        map['scanningMode'] = _$ScanningModeEnumMap[scanningMode]!;
+      }
+      final scanningPatch = scanningSettings.toPlatformMergePatch();
+      if (scanningPatch != null) {
+        map['scanningSettings'] = scanningPatch;
+      }
+    } else {
+      map['scanningMode'] =
+          _$ScanningModeEnumMap[scanningMode ?? ScanningMode.automatic]!;
+      map['scanningSettings'] = scanningSettings.toPlatformMergePatch() ?? {};
+    }
+
+    return map;
+  }
+
+  static bool _usesSessionPresetFactory(SessionPreset? preset) {
+    return preset == SessionPreset.documentVideo ||
+        preset == SessionPreset.documentPhoto ||
+        preset == SessionPreset.standaloneBarcode ||
+        preset == SessionPreset.verifyCapture;
+  }
 }
 
 /// Represents the configurable settings for scanning a document.
@@ -187,7 +291,7 @@ class BlinkIdSessionSettings {
 /// This class defines various parameters and policies related to the scanning
 /// process, including image quality handling, data extraction and redaction,
 /// along with options for frame processing and image extraction.
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class BlinkIdScanningSettings {
   /// Settings for the document capture module.
   ///
@@ -244,6 +348,27 @@ class BlinkIdScanningSettings {
   factory BlinkIdScanningSettings.fromJson(Map<String, dynamic> json) =>
       _$BlinkIdScanningSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$BlinkIdScanningSettingsToJson(this);
+
+  /// Non-null when at least one module override or non-default mismatch limit is set.
+  Map<String, dynamic>? toPlatformMergePatch() {
+    final map = <String, dynamic>{};
+    if (documentCaptureModule != null) {
+      map['documentCaptureModule'] = documentCaptureModule!.toJson();
+    }
+    if (mrzModule != null) {
+      map['mrzModule'] = mrzModule!.toJson();
+    }
+    if (barcodeModule != null) {
+      map['barcodeModule'] = barcodeModule!.toJson();
+    }
+    if (vizModule != null) {
+      map['vizModule'] = vizModule!.toJson();
+    }
+    if (maxAllowedMismatchesPerField != 0) {
+      map['maxAllowedMismatchesPerField'] = maxAllowedMismatchesPerField;
+    }
+    return map.isEmpty ? null : map;
+  }
 }
 
 /// Allows customization of various aspects of the UI/UX
@@ -271,6 +396,15 @@ class BlinkIdScanningUxSettings {
   /// Default: `true`
   bool allowHapticFeedback;
 
+  /// Determines whether sound is played for scanning-success events.
+  ///
+  /// When enabled, scan sounds are generated during scanning-success events,
+  /// such as when a document side is scanned.
+  /// When disabled, no sound is produced.
+  ///
+  /// Default: `true`
+  bool allowScanSound;
+
   /// The preferred camera position to use when capturing document.
   /// This value represents the user’s choice of front or back camera.
   ///
@@ -279,11 +413,31 @@ class BlinkIdScanningUxSettings {
   /// Default: [PreferredCamera.back]
   PreferredCamera preferredCamera;
 
+  /// When `true`, accepts only passport booklets and guides the user to the data page.
+  ///
+  /// Default: `false`
+  bool passportOnly;
+
+  /// Delay in milliseconds before the help tooltip is shown automatically.
+  /// Zero or negative disables automatic display.
+  ///
+  /// Default: `10000`
+  int helpTooltipShowDelay;
+
+  /// Delay in milliseconds before the help tooltip is hidden after being shown.
+  ///
+  /// Default: `5000`
+  int helpTooltipHideDelay;
+
   BlinkIdScanningUxSettings({
     this.allowHapticFeedback = true,
+    this.allowScanSound = true,
     this.showHelpButton = true,
     this.showOnboardingDialog = true,
     this.preferredCamera = PreferredCamera.back,
+    this.passportOnly = false,
+    this.helpTooltipShowDelay = 10000,
+    this.helpTooltipHideDelay = 5000,
   });
 
   factory BlinkIdScanningUxSettings.fromJson(Map<String, dynamic> json) =>
