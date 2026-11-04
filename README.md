@@ -11,9 +11,10 @@ It offers powerful capabilities for capturing and analyzing a wide range of iden
 
 However, since the wrapper is open source, you can add the features you need on your own.
 
-> **Current version:** `blinkid_flutter` **8001.0.0** (BlinkID SDK v8001).  
+> **Current version:** `blinkid_flutter` **8002.0.0** (BlinkID native SDK **v8002.0.0** on Android, **v8002.0.2** on iOS).  
+> If you are upgrading from v8001, see [What's new in v8002](#whats-new-in-v8002).  
 > If you are upgrading from v8000, see [What's new in v8001](#whats-new-in-v8001).  
-> If you are upgrading from v7.x, see [Migrating from v7.x](#migrating-from-v7x) (then apply the v8001 notes).
+> If you are upgrading from v7.x, see [Migrating from v7.x](#migrating-from-v7x) (then apply the v8001 and v8002 notes).
 
 # Table of contents
 - [Licensing](#licensing)
@@ -28,6 +29,7 @@ However, since the wrapper is open source, you can add the features you need on 
   - [BlinkID settings](#blinkid-settings)
   - [BlinkID results](#blinkid-results)
   - [Class filter & redaction](#class-filter--redaction)
+- [What's new in v8002](#whats-new-in-v8002)
 - [What's new in v8001](#whats-new-in-v8001)
 - [Migrating from v7.x](#migrating-from-v7x)
 - [Additional information](#additional-information)
@@ -40,7 +42,8 @@ A valid license key is required to initialize the BlinkID plugin. A free trial l
 |     Requirement     |        Flutter         |          iOS           |        Android         |
 |:-------------------:|:----------------------:|:----------------------:|:----------------------:|
 |   OS/API version    | Flutter 3.44 and newer |   iOS 16.0 and newer   | API level 24 and newer |
-| Compile SDK version |           —            |           —            |      36 and newer      |
+| Xcode / Swift       |           —            | Xcode **16.3+** (Swift **6.1** toolchain) | — |
+| Compile SDK version |           —            |           —            |      37 and newer      |
 |   Kotlin version    |           —            |           —            |    2.2.21 and newer    |
 |     AGP version     |           —            |           —            |    9.1.0 and newer     |
 |   Camera quality    |—                       |At least 1080p          |     At least 1080p     | 
@@ -58,7 +61,7 @@ The sample application demonstrates how the BlinkID plugin is implemented and ho
 2. **DirectAPI MultiSide scanning** — extract document information from two static images (gallery).
 3. **DirectAPI SingleSide scanning** — extract document information from a single static image (gallery).
 
-The sample UI lets you toggle and configure each scanning module (Document Capture, Barcode, MRZ, VIZ), session timeouts, UX options, class filter, and redaction — the same settings you would configure in your own app.
+The sample UI lets you toggle and configure each scanning module (Document Capture, Barcode, MRZ, VIZ), **session presets** (document video/photo, standalone barcode, verify capture), session timeouts, UX options, class filter, and redaction — the same settings you would configure in your own app.
 
 To obtain and run the sample application, follow the steps below:
 
@@ -119,7 +122,7 @@ Add `blinkid_flutter` to your `pubspec.yaml`:
 ```yaml
 dependencies:
   ...
-  blinkid_flutter: ^8001.0.0
+  blinkid_flutter: ^8002.0.0
 ```
 
 Then install:
@@ -148,7 +151,7 @@ id("org.jetbrains.kotlin.android") version "2.2.21" apply false
 No Jetpack Compose setup is required in your app. The plugin uses BlinkID's Activity-based scanning flow (`MbBlinkIdScan`); Compose runtime libraries are resolved transitively through the plugin. If your app already uses Compose for its own UI, you can keep your existing Compose configuration — the plugin does not declare a Compose BOM.
 
 ### 5. iOS — permissions and deployment target
-Set the minimum iOS deployment target to **16.0** in your Xcode project (or `ios/Podfile` / `IPHONEOS_DEPLOYMENT_TARGET` in xcconfig files).
+Set the minimum iOS deployment target to **16.0** in your Xcode project (or `ios/Podfile` / `IPHONEOS_DEPLOYMENT_TARGET` in xcconfig files). Build with **Xcode 16.3** or newer (**Swift 6.1** toolchain), matching BlinkID iOS **8002.0.2**.
 
 Add the following keys to `ios/Runner/Info.plist`:
 ```xml
@@ -416,8 +419,8 @@ Each Dart file documents available properties in detail. Native equivalents:
 - [iOS SDK documentation](https://microblink.github.io/blinkid-swift-package/documentation/blinkid/)
 
 Native deserialization implementations:
-- [Android](BlinkID/android/src/main/kotlin/com/microblink/blinkid/flutter/BlinkidDeserializationUtils.kt)
-- [iOS](BlinkID/ios/blinkid_flutter/Sources/blinkid_flutter/BlinkidDeserializationUtils.swift)
+- [Android](BlinkID/android/src/main/kotlin/com/microblink/blinkid/flutter/BlinkIdDeserializationUtils.kt)
+- [iOS](BlinkID/ios/blinkid_flutter/Sources/blinkid_flutter/Serialization/BlinkIdDeserializationUtils.swift)
 
 ### <a name="blinkid-results"></a> BlinkID Results
 
@@ -445,8 +448,8 @@ Native result documentation:
 - [iOS](https://microblink.github.io/blinkid-swift-package/documentation/blinkid/blinkidscanningresult)
 
 Native serialization implementations:
-- [Android](BlinkID/android/src/main/kotlin/com/microblink/blinkid/flutter/BlinkidSerializationUtils.kt)
-- [iOS](BlinkID/ios/blinkid_flutter/Sources/blinkid_flutter/BlinkidSerializationUtils.swift)
+- [Android](BlinkID/android/src/main/kotlin/com/microblink/blinkid/flutter/BlinkIdSerializationUtils.kt)
+- [iOS](BlinkID/ios/blinkid_flutter/Sources/blinkid_flutter/Serialization/BlinkIdSerializationUtils.swift)
 
 ### <a name="class-filter--redaction"></a> Class filter & redaction
 
@@ -485,6 +488,57 @@ final resolver = RedactionSettingsResolver([
 For **DirectAPI scanning**, pass a single `RedactionSettings` object directly to `performDirectApiScan`.
 
 `RedactionMode` values: `none`, `imageOnly`, `resultFieldsOnly`, `fullResult`.
+
+## <a name="whats-new-in-v8002"></a> What's new in v8002
+
+BlinkID v8002 adds native **session presets**, expanded document and barcode support, UX options for passport-only flows, and Android **compileSdk / targetSdk 37**. The Flutter plugin maps presets and merge semantics via `BlinkIdSessionSettings.toPlatformMap()` (used by `performScan` / `performDirectApiScan`).
+
+Highlights for Flutter:
+
+| Area | Change |
+| --- | --- |
+| **Session presets** | `SessionPreset` on `BlinkIdSessionSettings` with optional `DocumentVideoUseCase` / `DocumentPhotoUseCase`; `scanningSettings` merges onto the preset |
+| **Bridge / presets** | Use `toPlatformMap()` for native calls — avoids sending default module JSON that clears preset defaults; leave `scanningMode` null to keep the preset's mode |
+| **Scanning UX** | `passportOnly`; `helpTooltipShowDelay` / `helpTooltipHideDelay`; `allowScanSound` |
+| **Country ID (breaking)** | `CountryID.virginIslandsBritish` removed → `CountryID.britishVirginIslands` (`"britishVirginIslands"`) |
+| **Classification** | New `DocumentTypeID` / `RegionID.northernIreland` values (see [Release notes](Release%20notes.md)) |
+| **Results** | `vehicleNumber`, `passportNumber`, `trafficParticipantNumber` on `BlinkIdScanningResult` and `VizResult` |
+| **Android** | Integrator apps should use **compileSdk 37** (and **targetSdk 37** recommended) |
+| **iOS build** | **Xcode 16.3+** (Swift **6.1** toolchain) for native SDK **8002.0.2** |
+
+### Session preset example
+
+```dart
+final sessionSettings = BlinkIdSessionSettings(
+  sessionPreset: SessionPreset.documentVideo,
+  documentVideoUseCase: DocumentVideoUseCase(
+    scenario: DocumentScenario.general,
+    quality: VideoQualityProfile.balanced,
+    captureEnvironment: VideoCaptureEnvironment.handHeld,
+  ),
+  // Optional module overrides merge onto the preset (whole module objects per key):
+  scanningSettings: BlinkIdScanningSettings(
+    documentCaptureModule: DocumentCaptureModuleSettings(
+      documentImageReturnEnabled: true,
+    ),
+  ),
+);
+// Omit scanningMode (null) to keep the preset default; set ScanningMode.single or .automatic to override
+```
+
+Manual module configuration without `sessionPreset` is unchanged.
+
+### Migrating country filter from v8001
+
+```dart
+// v8001
+DocumentFilter(country: CountryID.virginIslandsBritish)
+
+// v8002
+DocumentFilter(country: CountryID.britishVirginIslands)
+```
+
+Full changelog (documents, native bug fixes, API details, Flutter bridge fixes): [Release notes.md](Release%20notes.md) and [platform release notes](https://docs.microblink.com/blinkid/release-notes).
 
 ## <a name="whats-new-in-v8001"></a> What's new in v8001
 
@@ -617,7 +671,7 @@ await blinkIdPlugin.performScan(
 
 Review the [scanning modules](#scanning-modules) section and the sample app configuration files to map your v7 settings to the appropriate v8000 modules.
 
-After migrating from v7 to the modular API, also apply [What's new in v8001](#whats-new-in-v8001) (nested `resourcesConfig` / OTA, `cropType`, nested class info).
+After migrating from v7 to the modular API, apply [What's new in v8001](#whats-new-in-v8001) (nested `resourcesConfig` / OTA, `cropType`, nested class info), then [What's new in v8002](#whats-new-in-v8002) if you upgrade to the latest release.
 
 ## <a name="additional-information"></a> Additional information
 For any additional questions and information, feel free to contact us [here](https://help.microblink.com), or directly to the Support team via mail support@microblink.com.

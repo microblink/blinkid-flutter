@@ -11,6 +11,12 @@ import com.microblink.blinkid.core.result.classinfo.DocumentClassInfo
 import com.microblink.blinkid.core.result.classinfo.RegionId
 import com.microblink.blinkid.core.result.classinfo.DocumentTypeId
 import com.microblink.blinkid.core.session.BlinkIdSessionSettings
+import com.microblink.blinkid.core.settings.usecase.DocumentPhotoUseCase
+import com.microblink.blinkid.core.settings.usecase.DocumentScenario
+import com.microblink.blinkid.core.settings.usecase.DocumentVideoUseCase
+import com.microblink.blinkid.core.settings.usecase.PhotoQualityProfile
+import com.microblink.blinkid.core.settings.usecase.VideoCaptureEnvironment
+import com.microblink.blinkid.core.settings.usecase.VideoQualityProfile
 import com.microblink.blinkid.core.session.ScanningMode
 import com.microblink.blinkid.core.settings.DocumentFilter
 import com.microblink.blinkid.core.settings.DocumentNumberRedactionSettings
@@ -47,6 +53,13 @@ object BlinkIdDeserializationUtils {
 
     private const val DEFAULT_OTA_DOWNLOAD_URL = "https://blinkid-ota.microblink.com"
     private const val DEFAULT_OTA_RESOURCES_LOCAL_FOLDER = "microblink/blinkid/ota"
+
+    private val sessionPresetFactories = setOf(
+        "documentVideo",
+        "documentPhoto",
+        "standaloneBarcode",
+        "verifyCapture",
+    )
 
     fun deserializeBlinkIdSdkSettings(blinkIdSdkSettingsMap: Map<String, Any>?): BlinkIdSdkSettings? {
         val licenseKey = blinkIdSdkSettingsMap?.get("licenseKey") as? String ?: return null
@@ -91,21 +104,114 @@ object BlinkIdDeserializationUtils {
     ): BlinkIdSessionSettings {
         if (blinkIdSdkSessionSettingsMap == null) return BlinkIdSessionSettings()
 
-        val scanningSettingsMap =
-            blinkIdSdkSessionSettingsMap["scanningSettings"] as? Map<String, Any>
-        val scanningSettings = deserializeScanningSettings(scanningSettingsMap)
+        val preset = (blinkIdSdkSessionSettingsMap["sessionPreset"] as? String)
+            ?.takeIf { it in sessionPresetFactories }
+        var settings = when (preset) {
+            "documentVideo" -> BlinkIdSessionSettings.documentVideo(
+                deserializeDocumentVideoUseCase(
+                    blinkIdSdkSessionSettingsMap["documentVideoUseCase"] as? Map<String, Any>,
+                ),
+            )
+            "documentPhoto" -> BlinkIdSessionSettings.documentPhoto(
+                deserializeDocumentPhotoUseCase(
+                    blinkIdSdkSessionSettingsMap["documentPhotoUseCase"] as? Map<String, Any>,
+                ),
+            )
+            "standaloneBarcode" -> BlinkIdSessionSettings.standaloneBarcode()
+            "verifyCapture" -> BlinkIdSessionSettings.verifyCapture()
+            else -> BlinkIdSessionSettings(
+                inputImageSource = if (isDirectApi) InputImageSource.Photo else InputImageSource.Video,
+                scanningMode = deserializeScanningMode(
+                    blinkIdSdkSessionSettingsMap["scanningMode"] as? String,
+                ),
+                scanningSettings = deserializeScanningSettings(
+                    blinkIdSdkSessionSettingsMap["scanningSettings"] as? Map<String, Any>,
+                ),
+            )
+        }
+
+        if (preset != null) {
+            if (blinkIdSdkSessionSettingsMap.containsKey("scanningMode")) {
+                settings = settings.copy(
+                    scanningMode = deserializeScanningMode(
+                        blinkIdSdkSessionSettingsMap["scanningMode"] as? String,
+                    ),
+                )
+            }
+            val scanningSettingsPatch =
+                blinkIdSdkSessionSettingsMap["scanningSettings"] as? Map<String, Any>
+            if (isMeaningfulScanningSettingsPatch(scanningSettingsPatch)) {
+                settings = settings.copy(
+                    scanningSettings = mergeScanningSettings(
+                        settings.scanningSettings,
+                        scanningSettingsPatch!!,
+                    ),
+                )
+            }
+        }
+
+        if (isDirectApi) {
+            settings = settings.copy(inputImageSource = InputImageSource.Photo)
+        }
+
         logSessionSettings(
             source = if (isDirectApi) "directApi" else "performScan",
-            sessionMap = blinkIdSdkSessionSettingsMap,
-            scanningSettingsMap = scanningSettingsMap,
-            scanningSettings = scanningSettings,
+            settings = settings,
         )
 
-        return BlinkIdSessionSettings(
-            inputImageSource = if (isDirectApi) InputImageSource.Photo else InputImageSource.Video,
-            scanningMode = deserializeScanningMode(blinkIdSdkSessionSettingsMap["scanningMode"] as? String),
-            scanningSettings = scanningSettings,
+        return settings
+    }
+
+    private fun deserializeDocumentVideoUseCase(useCaseMap: Map<String, Any>?): DocumentVideoUseCase {
+        if (useCaseMap == null) return DocumentVideoUseCase()
+        return DocumentVideoUseCase(
+            scenario = parseDocumentScenario(useCaseMap["scenario"] as? String),
+            quality = parseVideoQualityProfile(useCaseMap["quality"] as? String),
+            captureEnvironment = parseVideoCaptureEnvironment(
+                useCaseMap["captureEnvironment"] as? String,
+            ),
         )
+    }
+
+    private fun deserializeDocumentPhotoUseCase(useCaseMap: Map<String, Any>?): DocumentPhotoUseCase {
+        if (useCaseMap == null) return DocumentPhotoUseCase()
+        return DocumentPhotoUseCase(
+            scenario = parseDocumentScenario(useCaseMap["scenario"] as? String),
+            quality = parsePhotoQualityProfile(useCaseMap["quality"] as? String),
+        )
+    }
+
+    private fun parseDocumentScenario(value: String?): DocumentScenario {
+        return when (value) {
+            "mrzMandatory" -> DocumentScenario.MrzMandatory
+            "mrzOnly" -> DocumentScenario.MrzOnly
+            "barcodeOnly" -> DocumentScenario.BarcodeOnly
+            else -> DocumentScenario.General
+        }
+    }
+
+    private fun parseVideoQualityProfile(value: String?): VideoQualityProfile {
+        return when (value) {
+            "highSpeed" -> VideoQualityProfile.HighSpeed
+            "highAccuracy" -> VideoQualityProfile.HighAccuracy
+            "permissive" -> VideoQualityProfile.Permissive
+            else -> VideoQualityProfile.Balanced
+        }
+    }
+
+    private fun parseVideoCaptureEnvironment(value: String?): VideoCaptureEnvironment {
+        return when (value) {
+            "stationary" -> VideoCaptureEnvironment.Stationary
+            else -> VideoCaptureEnvironment.HandHeld
+        }
+    }
+
+    private fun parsePhotoQualityProfile(value: String?): PhotoQualityProfile {
+        return when (value) {
+            "highAccuracy" -> PhotoQualityProfile.HighAccuracy
+            "permissive" -> PhotoQualityProfile.Permissive
+            else -> PhotoQualityProfile.Balanced
+        }
     }
 
     private fun deserializeScanningMode(value: String?): ScanningMode {
@@ -118,16 +224,55 @@ object BlinkIdDeserializationUtils {
 
     private fun deserializeScanningSettings(scanningSettingsMap: Map<String, Any>?): ScanningSettings {
         if (scanningSettingsMap == null) return ScanningSettings()
-        return ScanningSettings(
-            documentCaptureModule = optionalDocumentCaptureModuleSettings(
-                scanningSettingsMap["documentCaptureModule"],
-            ),
-            barcodeModule = optionalBarcodeModuleSettings(scanningSettingsMap["barcodeModule"]),
-            mrzModule = optionalMrzModuleSettings(scanningSettingsMap["mrzModule"]),
-            vizModule = optionalVizModuleSettings(scanningSettingsMap["vizModule"]),
-            maxAllowedMismatchesPerField = (scanningSettingsMap["maxAllowedMismatchesPerField"] as? Int)?.toUInt()
-                ?: 0u,
-        )
+        return mergeScanningSettings(ScanningSettings(), scanningSettingsMap)
+    }
+
+    private fun isMeaningfulScanningSettingsPatch(patch: Map<String, Any>?): Boolean {
+        if (patch == null || patch.isEmpty()) return false
+        if (patch["documentCaptureModule"] != null) return true
+        if (patch["barcodeModule"] != null) return true
+        if (patch["mrzModule"] != null) return true
+        if (patch["vizModule"] != null) return true
+        if (patch.containsKey("maxAllowedMismatchesPerField")) return true
+        return false
+    }
+
+    private fun mergeScanningSettings(
+        base: ScanningSettings,
+        patch: Map<String, Any>,
+    ): ScanningSettings {
+        if (patch.isEmpty()) return base
+
+        var settings = base
+        if (patch.containsKey("documentCaptureModule")) {
+            settings = settings.copy(
+                documentCaptureModule = optionalDocumentCaptureModuleSettings(
+                    patch["documentCaptureModule"],
+                ),
+            )
+        }
+        if (patch.containsKey("barcodeModule")) {
+            settings = settings.copy(
+                barcodeModule = optionalBarcodeModuleSettings(patch["barcodeModule"]),
+            )
+        }
+        if (patch.containsKey("mrzModule")) {
+            settings = settings.copy(
+                mrzModule = optionalMrzModuleSettings(patch["mrzModule"]),
+            )
+        }
+        if (patch.containsKey("vizModule")) {
+            settings = settings.copy(
+                vizModule = optionalVizModuleSettings(patch["vizModule"]),
+            )
+        }
+        if (patch.containsKey("maxAllowedMismatchesPerField")) {
+            settings = settings.copy(
+                maxAllowedMismatchesPerField = (patch["maxAllowedMismatchesPerField"] as? Int)?.toUInt()
+                    ?: 0u,
+            )
+        }
+        return settings
     }
 
     private fun optionalDocumentCaptureModuleSettings(value: Any?): DocumentCaptureModuleSettings? {
@@ -417,10 +562,16 @@ object BlinkIdDeserializationUtils {
         val inactivityTimeoutMs = (uxMap["inactivityTimeoutDuration"] as? Int)
             ?: (sessionSettingsMap?.get("inactivityTimeoutDuration") as? Int)
             ?: 10000
+        val helpTooltipShowDelayMs = (uxMap["helpTooltipShowDelay"] as? Int) ?: 10_000
+        val helpTooltipHideDelayMs = (uxMap["helpTooltipHideDelay"] as? Int) ?: 5_000
         return BlinkIdUxSettings(
             stepTimeoutDuration = stepTimeoutMs.milliseconds,
             inactivityTimeoutDuration = inactivityTimeoutMs.milliseconds,
             allowHapticFeedback = (uxMap["allowHapticFeedback"] as? Boolean) ?: true,
+            allowScanSound = (uxMap["allowScanSound"] as? Boolean) ?: true,
+            passportOnly = (uxMap["passportOnly"] as? Boolean) ?: false,
+            helpTooltipShowDelay = helpTooltipShowDelayMs.milliseconds,
+            helpTooltipHideDelay = helpTooltipHideDelayMs.milliseconds,
             classFilter = CustomClassFilter(classFilterMap),
             redactionSettingsResolver = deserializeRedactionSettingsResolver(redactionSettingsResolverMap),
         )
@@ -508,21 +659,17 @@ object BlinkIdDeserializationUtils {
 
     private fun logSessionSettings(
         source: String,
-        sessionMap: Map<String, Any>,
-        scanningSettingsMap: Map<String, Any>?,
-        scanningSettings: ScanningSettings,
+        settings: BlinkIdSessionSettings,
     ) {
-        Log.i(TAG, "[$source] scanningMode=${sessionMap["scanningMode"]}")
+        val scanningSettings = settings.scanningSettings
+        Log.i(TAG, "[$source] effective session=$settings")
         Log.i(
             TAG,
-            "[$source] raw modules: documentCapture=${scanningSettingsMap?.get("documentCaptureModule")}, " +
-                "barcode=${scanningSettingsMap?.get("barcodeModule")}, " +
-                "mrz=${scanningSettingsMap?.get("mrzModule")}, " +
-                "viz=${scanningSettingsMap?.get("vizModule")}",
+            "[$source] scanningMode=${settings.scanningMode} inputImageSource=${settings.inputImageSource}",
         )
         Log.i(
             TAG,
-            "[$source] deserialized modules: documentCapture=${scanningSettings.documentCaptureModule}, " +
+            "[$source] modules: documentCapture=${scanningSettings.documentCaptureModule}, " +
                 "barcode=${scanningSettings.barcodeModule}, " +
                 "mrz=${scanningSettings.mrzModule}, " +
                 "viz=${scanningSettings.vizModule}",

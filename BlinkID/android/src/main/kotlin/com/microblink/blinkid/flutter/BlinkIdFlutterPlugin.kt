@@ -152,10 +152,6 @@ class BlinkIdFlutterPlugin() : FlutterPlugin, MethodCallHandler, ActivityAware,
         try {
             val blinkIdSdkSettings = call.argument<Map<String, Any>>("blinkIdSdkSettings")
             val blinkIdSessionSettings = call.argument<Map<String, Any>>("blinkIdSessionSettings")
-            android.util.Log.i(
-                "BlinkIdFlutter",
-                "performScan received blinkIdSessionSettings=$blinkIdSessionSettings",
-            )
             val blinkIdScanningUxSettings = call.argument<Map<String, Any>>("blinkIdScanningUxSettings")
             val classFilterMap = call.argument<Map<String, Any>>("blinkIdClassFilter")
             val redactionSettingsResolverMap = call.argument<Map<String, Any>>("blinkIdRedactionSettingsResolver")

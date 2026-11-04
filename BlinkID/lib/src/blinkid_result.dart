@@ -84,6 +84,15 @@ class BlinkIdScanningResult {
   /// The document number.
   StringResult? documentNumber;
 
+  /// The vehicle number.
+  StringResult? vehicleNumber;
+
+  /// The passport number.
+  StringResult? passportNumber;
+
+  /// The traffic participant number.
+  StringResult? trafficParticipantNumber;
+
   /// cardAccessNumber
   StringResult? cardAccessNumber;
 
@@ -325,6 +334,18 @@ class BlinkIdScanningResult {
     documentNumber = createStringResult(
       nativeBlinkIdScanningResult,
       'documentNumber',
+    );
+    vehicleNumber = createStringResult(
+      nativeBlinkIdScanningResult,
+      'vehicleNumber',
+    );
+    passportNumber = createStringResult(
+      nativeBlinkIdScanningResult,
+      'passportNumber',
+    );
+    trafficParticipantNumber = createStringResult(
+      nativeBlinkIdScanningResult,
+      'trafficParticipantNumber',
     );
     cardAccessNumber = createStringResult(
       nativeBlinkIdScanningResult,

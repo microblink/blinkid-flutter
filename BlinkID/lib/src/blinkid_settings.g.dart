@@ -94,12 +94,96 @@ Map<String, dynamic> _$BlinkIdSdkSettingsToJson(BlinkIdSdkSettings instance) =>
       'microblinkProxyUrl': instance.microblinkProxyUrl,
     };
 
+DocumentVideoUseCase _$DocumentVideoUseCaseFromJson(
+  Map<String, dynamic> json,
+) => DocumentVideoUseCase(
+  scenario:
+      $enumDecodeNullable(_$DocumentScenarioEnumMap, json['scenario']) ??
+      DocumentScenario.general,
+  quality:
+      $enumDecodeNullable(_$VideoQualityProfileEnumMap, json['quality']) ??
+      VideoQualityProfile.balanced,
+  captureEnvironment:
+      $enumDecodeNullable(
+        _$VideoCaptureEnvironmentEnumMap,
+        json['captureEnvironment'],
+      ) ??
+      VideoCaptureEnvironment.handHeld,
+);
+
+Map<String, dynamic> _$DocumentVideoUseCaseToJson(
+  DocumentVideoUseCase instance,
+) => <String, dynamic>{
+  'scenario': _$DocumentScenarioEnumMap[instance.scenario]!,
+  'quality': _$VideoQualityProfileEnumMap[instance.quality]!,
+  'captureEnvironment':
+      _$VideoCaptureEnvironmentEnumMap[instance.captureEnvironment]!,
+};
+
+const _$DocumentScenarioEnumMap = {
+  DocumentScenario.general: 'general',
+  DocumentScenario.mrzMandatory: 'mrzMandatory',
+  DocumentScenario.mrzOnly: 'mrzOnly',
+  DocumentScenario.barcodeOnly: 'barcodeOnly',
+};
+
+const _$VideoQualityProfileEnumMap = {
+  VideoQualityProfile.balanced: 'balanced',
+  VideoQualityProfile.highSpeed: 'highSpeed',
+  VideoQualityProfile.highAccuracy: 'highAccuracy',
+  VideoQualityProfile.permissive: 'permissive',
+};
+
+const _$VideoCaptureEnvironmentEnumMap = {
+  VideoCaptureEnvironment.handHeld: 'handHeld',
+  VideoCaptureEnvironment.stationary: 'stationary',
+};
+
+DocumentPhotoUseCase _$DocumentPhotoUseCaseFromJson(
+  Map<String, dynamic> json,
+) => DocumentPhotoUseCase(
+  scenario:
+      $enumDecodeNullable(_$DocumentScenarioEnumMap, json['scenario']) ??
+      DocumentScenario.general,
+  quality:
+      $enumDecodeNullable(_$PhotoQualityProfileEnumMap, json['quality']) ??
+      PhotoQualityProfile.balanced,
+);
+
+Map<String, dynamic> _$DocumentPhotoUseCaseToJson(
+  DocumentPhotoUseCase instance,
+) => <String, dynamic>{
+  'scenario': _$DocumentScenarioEnumMap[instance.scenario]!,
+  'quality': _$PhotoQualityProfileEnumMap[instance.quality]!,
+};
+
+const _$PhotoQualityProfileEnumMap = {
+  PhotoQualityProfile.balanced: 'balanced',
+  PhotoQualityProfile.highAccuracy: 'highAccuracy',
+  PhotoQualityProfile.permissive: 'permissive',
+};
+
 BlinkIdSessionSettings _$BlinkIdSessionSettingsFromJson(
   Map<String, dynamic> json,
 ) => BlinkIdSessionSettings(
-  scanningMode:
-      $enumDecodeNullable(_$ScanningModeEnumMap, json['scanningMode']) ??
-      ScanningMode.automatic,
+  sessionPreset: $enumDecodeNullable(
+    _$SessionPresetEnumMap,
+    json['sessionPreset'],
+  ),
+  documentVideoUseCase: json['documentVideoUseCase'] == null
+      ? null
+      : DocumentVideoUseCase.fromJson(
+          json['documentVideoUseCase'] as Map<String, dynamic>,
+        ),
+  documentPhotoUseCase: json['documentPhotoUseCase'] == null
+      ? null
+      : DocumentPhotoUseCase.fromJson(
+          json['documentPhotoUseCase'] as Map<String, dynamic>,
+        ),
+  scanningMode: $enumDecodeNullable(
+    _$ScanningModeEnumMap,
+    json['scanningMode'],
+  ),
   scanningSettings: json['scanningSettings'] == null
       ? null
       : BlinkIdScanningSettings.fromJson(
@@ -113,10 +197,20 @@ BlinkIdSessionSettings _$BlinkIdSessionSettingsFromJson(
 Map<String, dynamic> _$BlinkIdSessionSettingsToJson(
   BlinkIdSessionSettings instance,
 ) => <String, dynamic>{
-  'scanningMode': _$ScanningModeEnumMap[instance.scanningMode]!,
+  'sessionPreset': ?_$SessionPresetEnumMap[instance.sessionPreset],
+  'documentVideoUseCase': ?instance.documentVideoUseCase,
+  'documentPhotoUseCase': ?instance.documentPhotoUseCase,
+  'scanningMode': ?_$ScanningModeEnumMap[instance.scanningMode],
   'scanningSettings': instance.scanningSettings,
   'stepTimeoutDuration': instance.stepTimeoutDuration,
   'inactivityTimeoutDuration': instance.inactivityTimeoutDuration,
+};
+
+const _$SessionPresetEnumMap = {
+  SessionPreset.documentVideo: 'documentVideo',
+  SessionPreset.documentPhoto: 'documentPhoto',
+  SessionPreset.standaloneBarcode: 'standaloneBarcode',
+  SessionPreset.verifyCapture: 'verifyCapture',
 };
 
 const _$ScanningModeEnumMap = {
@@ -150,10 +244,10 @@ BlinkIdScanningSettings _$BlinkIdScanningSettingsFromJson(
 Map<String, dynamic> _$BlinkIdScanningSettingsToJson(
   BlinkIdScanningSettings instance,
 ) => <String, dynamic>{
-  'documentCaptureModule': instance.documentCaptureModule,
-  'mrzModule': instance.mrzModule,
-  'barcodeModule': instance.barcodeModule,
-  'vizModule': instance.vizModule,
+  'documentCaptureModule': ?instance.documentCaptureModule,
+  'mrzModule': ?instance.mrzModule,
+  'barcodeModule': ?instance.barcodeModule,
+  'vizModule': ?instance.vizModule,
   'maxAllowedMismatchesPerField': instance.maxAllowedMismatchesPerField,
 };
 
@@ -161,11 +255,16 @@ BlinkIdScanningUxSettings _$BlinkIdScanningUxSettingsFromJson(
   Map<String, dynamic> json,
 ) => BlinkIdScanningUxSettings(
   allowHapticFeedback: json['allowHapticFeedback'] as bool? ?? true,
+  allowScanSound: json['allowScanSound'] as bool? ?? true,
   showHelpButton: json['showHelpButton'] as bool? ?? true,
   showOnboardingDialog: json['showOnboardingDialog'] as bool? ?? true,
   preferredCamera:
       $enumDecodeNullable(_$PreferredCameraEnumMap, json['preferredCamera']) ??
       PreferredCamera.back,
+  passportOnly: json['passportOnly'] as bool? ?? false,
+  helpTooltipShowDelay:
+      (json['helpTooltipShowDelay'] as num?)?.toInt() ?? 10000,
+  helpTooltipHideDelay: (json['helpTooltipHideDelay'] as num?)?.toInt() ?? 5000,
 );
 
 Map<String, dynamic> _$BlinkIdScanningUxSettingsToJson(
@@ -174,7 +273,11 @@ Map<String, dynamic> _$BlinkIdScanningUxSettingsToJson(
   'showHelpButton': instance.showHelpButton,
   'showOnboardingDialog': instance.showOnboardingDialog,
   'allowHapticFeedback': instance.allowHapticFeedback,
+  'allowScanSound': instance.allowScanSound,
   'preferredCamera': _$PreferredCameraEnumMap[instance.preferredCamera]!,
+  'passportOnly': instance.passportOnly,
+  'helpTooltipShowDelay': instance.helpTooltipShowDelay,
+  'helpTooltipHideDelay': instance.helpTooltipHideDelay,
 };
 
 const _$PreferredCameraEnumMap = {

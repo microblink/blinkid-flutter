@@ -4,8 +4,38 @@ import 'sample_filter_options.dart';
 /// Default OTA service URL used by the native BlinkID SDK when omitted.
 const defaultOtaServiceUrl = 'https://blinkid-ota.microblink.com';
 
+/// Manual module tuning, or a native session preset factory.
+enum SampleSessionPresetMode {
+  manual,
+  documentVideo,
+  documentPhoto,
+  standaloneBarcode,
+  verifyCapture,
+}
+
+const sampleSessionPresetModes = SampleSessionPresetMode.values;
+
+const documentScenarios = DocumentScenario.values;
+
+const videoQualityProfiles = VideoQualityProfile.values;
+
+const photoQualityProfiles = PhotoQualityProfile.values;
+
+const videoCaptureEnvironments = VideoCaptureEnvironment.values;
+
 /// Holds UI-driven scanning configuration for the BlinkID sample app.
 class ScanningModulesConfig {
+  SampleSessionPresetMode sessionPresetMode = SampleSessionPresetMode.manual;
+
+  DocumentScenario documentScenario = DocumentScenario.general;
+
+  VideoQualityProfile videoQuality = VideoQualityProfile.balanced;
+
+  PhotoQualityProfile photoQuality = PhotoQualityProfile.balanced;
+
+  VideoCaptureEnvironment videoCaptureEnvironment =
+      VideoCaptureEnvironment.handHeld;
+
   ScanningMode scanningMode = ScanningMode.automatic;
 
   /// Milliseconds before a scanning step times out. `0` disables the timeout.
@@ -16,6 +46,10 @@ class ScanningModulesConfig {
 
   /// Shown at the start of the camera scanning flow (performScan only).
   bool showOnboardingDialog = true;
+
+  bool allowScanSound = true;
+
+  bool passportOnly = false;
 
   bool barcodeEnabled = true;
   BarcodeModuleSettings barcode = ScanningModulesConfig.defaultBarcodeModule;
@@ -145,12 +179,83 @@ class ScanningModulesConfig {
   BlinkIdSessionSettings toSessionSettings({
     bool forDirectApi = false,
   }) {
-    return BlinkIdSessionSettings(
-      scanningMode: scanningMode,
+    final usesPreset = sessionPresetMode != SampleSessionPresetMode.manual;
+
+    final sessionSettings = BlinkIdSessionSettings(
+      scanningMode: usesPreset ? null : scanningMode,
       scanningSettings: toScanningSettings(forDirectApi: forDirectApi),
       stepTimeoutDuration: stepTimeoutDuration,
       inactivityTimeoutDuration: inactivityTimeoutDuration,
     );
+
+    if (!usesPreset) {
+      return sessionSettings;
+    }
+
+    sessionSettings.sessionPreset = _toSessionPreset(sessionPresetMode);
+    switch (sessionPresetMode) {
+      case SampleSessionPresetMode.documentVideo:
+        sessionSettings.documentVideoUseCase = DocumentVideoUseCase(
+          scenario: documentScenario,
+          quality: videoQuality,
+          captureEnvironment: videoCaptureEnvironment,
+        );
+      case SampleSessionPresetMode.documentPhoto:
+        sessionSettings.documentPhotoUseCase = DocumentPhotoUseCase(
+          scenario: documentScenario,
+          quality: photoQuality,
+        );
+      case SampleSessionPresetMode.standaloneBarcode:
+      case SampleSessionPresetMode.verifyCapture:
+      case SampleSessionPresetMode.manual:
+        break;
+    }
+
+    return sessionSettings;
+  }
+
+  /// Manual turns the four modules on with constructor defaults.
+  /// Any other preset turns them off and clears stored edits, so the scan
+  /// sends only the preset until a module is turned back on.
+  void applySessionPresetMode(SampleSessionPresetMode mode) {
+    sessionPresetMode = mode;
+    resetScanningModules(enabled: mode == SampleSessionPresetMode.manual);
+  }
+
+  void resetScanningModules({required bool enabled}) {
+    barcodeEnabled = enabled;
+    barcode = defaultBarcodeModule;
+    documentCaptureEnabled = enabled;
+    documentCapture = defaultDocumentCaptureModule;
+    mrzEnabled = enabled;
+    mrz = defaultMrzModule;
+    vizEnabled = enabled;
+    viz = defaultVizModule;
+  }
+
+  String moduleToggleSubtitle(bool enabled) {
+    if (enabled) {
+      return 'Enabled';
+    }
+    if (sessionPresetMode == SampleSessionPresetMode.manual) {
+      return 'Disabled (null)';
+    }
+    return 'Not sent; the preset applies';
+  }
+
+  SessionPreset _toSessionPreset(SampleSessionPresetMode mode) {
+    switch (mode) {
+      case SampleSessionPresetMode.documentVideo:
+        return SessionPreset.documentVideo;
+      case SampleSessionPresetMode.documentPhoto:
+        return SessionPreset.documentPhoto;
+      case SampleSessionPresetMode.standaloneBarcode:
+        return SessionPreset.standaloneBarcode;
+      case SampleSessionPresetMode.verifyCapture:
+        return SessionPreset.verifyCapture;
+      case SampleSessionPresetMode.manual:
+        throw StateError('manual preset mode has no SessionPreset');
+    }
   }
 
   BlinkIdScanningUxSettings toUxSettings() {
@@ -158,26 +263,25 @@ class ScanningModulesConfig {
       showHelpButton: true,
       showOnboardingDialog: showOnboardingDialog,
       allowHapticFeedback: true,
+      allowScanSound: allowScanSound,
       preferredCamera: PreferredCamera.back,
+      passportOnly: passportOnly,
     );
   }
 
   void resetToDefaults() {
+    sessionPresetMode = SampleSessionPresetMode.manual;
+    documentScenario = DocumentScenario.general;
+    videoQuality = VideoQualityProfile.balanced;
+    photoQuality = PhotoQualityProfile.balanced;
+    videoCaptureEnvironment = VideoCaptureEnvironment.handHeld;
     scanningMode = ScanningMode.automatic;
     stepTimeoutDuration = 60000;
     inactivityTimeoutDuration = 10000;
     showOnboardingDialog = true;
-    barcodeEnabled = true;
-    barcode = defaultBarcodeModule;
-
-    documentCaptureEnabled = true;
-    documentCapture = defaultDocumentCaptureModule;
-
-    mrzEnabled = true;
-    mrz = defaultMrzModule;
-
-    vizEnabled = true;
-    viz = defaultVizModule;
+    allowScanSound = true;
+    passportOnly = false;
+    resetScanningModules(enabled: true);
 
     classFilterEnabled = false;
     classFilterInclude = [];

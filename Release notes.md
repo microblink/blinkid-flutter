@@ -1,3 +1,143 @@
+## v8002.0.0
+
+Updated to BlinkID native SDKs **v8002.0.0** (Android) and **v8002.0.2** (iOS). See also the [platform release notes](https://docs.microblink.com/blinkid/release-notes) and the native SDK release notes ([Android](https://github.com/microblink/blinkid-android/releases/tag/v8002.0.0), [iOS](https://github.com/microblink/blinkid-ios/releases/tag/v8002.0.2)).
+
+### What's new
+- **Session presets** — Configure common workflows with `BlinkIdSessionSettings.sessionPreset` instead of hand-tuning every module flag:
+  - `documentVideo` — live camera document scanning (optional `DocumentVideoUseCase`: `scenario`, `quality`, `captureEnvironment`).
+  - `documentPhoto` — single photo or gallery image (optional `DocumentPhotoUseCase`: `scenario`, `quality`).
+  - `standaloneBarcode` — barcode scanning without document detection.
+  - `verifyCapture` — BlinkID Verify live capture (face, input and barcode images; no result aggregation).
+  - Optional `scanningSettings` **merges** onto the preset (per module key); omit overrides to keep preset defaults. Manual module configuration without a preset remains supported. The Flutter plugin sends session settings via `BlinkIdSessionSettings.toPlatformMap()` on `performScan` / `performDirectApiScan`.
+- **Scanning UX** — `BlinkIdScanningUxSettings.passportOnly` for passport-booklet-only flows; `helpTooltipShowDelay` and `helpTooltipHideDelay` to control automatic help tooltip timing; `allowScanSound` to enable or disable scan completion sounds.
+- **Barcode & document expansion** (native) — Faster, more resilient 1D/2D barcode engine; expanded barcode/QR parsing for Argentina DNI and Philippines IDs.
+- **Integration presets** (native) — Quality profiles (`balanced`, `highSpeed`, `highAccuracy`, `permissive`) and scenarios (`general`, `mrzMandatory`, `mrzOnly`, `barcodeOnly`) align with native preset factories exposed in Flutter via `sessionPreset` and use-case objects.
+
+### Bug fixes
+- Passport card scanning flow: fixed occasional skip of the back side of passport cards.
+- Single-image mode cropping: improved edge cases where crop detection failed or bounds were inaccurate.
+- Centenarian date logic: fixed two-digit birth-year rollover in MRZ and date parsing for ages 100+.
+
+### Flutter plugin fixes (shipped in v8002.0.0)
+These fixes are in the Flutter bridge or plugin and are not called out separately in the native SDK release notes:
+- Fixed native bridge serialization of `ScanningSide` as `"first"` / `"second"` strings (was integer indices).
+- Fixed MRZ `documentType` serialization as a string on the native bridge.
+- Fixed Android barcode `rawData` serialization in scan results.
+- Fixed Android Kotlin plugin source filenames for case-sensitive filesystems (e.g. Linux CI).
+- Fixed `MrzResult.verified` mapping from native scan results.
+- Fixed iOS `documentClassInfo.country.id` for British Virgin Islands to `"britishVirginIslands"` when serializing results (SDK `rawValue` is `"virginIslandsBritish"`).
+- Fixed `DocumentTypeID.byIdCard` wire value (`"byIdCard"`) for class filters on Android; iOS bridge maps `"byIdCard"` ↔ native `byidCard`.
+
+### New documents support
+- Bahrain - Vehicle Ownership Certificate
+- British Virgin Islands - DL
+- British Virgin Islands - Passport
+- British Virgin Islands - Rigid Passport
+- China - DL
+- Colombia - Consular ID
+- Congo - ID
+- Dominican Republic - Consular ID
+- Dominican Republic - Residence Permit
+- Ethiopia - Rigid Passport
+- Fiji - Passport
+- Honduras - Consular ID
+- Hong Kong - DL
+- Iraq - DL
+- Iraq - Vehicle Registration
+- Jordan - Rigid Passport
+- Kazakhstan - DL
+- Liechtenstein - Passport
+- Liechtenstein - Rigid Passport
+- Moldova - Resident ID
+- Namibia - DL
+- Niger - DL
+- Northern Mariana Islands - DL
+- Somalia - ID
+- Suriname - Rigid Passport
+- Syria - DL
+- Syria - Resident ID
+- Tajikistan - DL
+- UAE - Golden Card
+- Yemen - ID
+
+#### New document versions for supported documents
+- China - DL
+- Colombia - Passport
+- Dominican Republic - DL
+- Gambia - Passport
+- Japan - Residence Permit
+- Kyrgyzstan - DL
+- Kyrgyzstan - ID
+- Moldova - DL
+- Moldova - Rigid Passport
+- Paraguay - DL
+- Tajikistan - Rigid Passport
+- USA, Montana - DL
+- USA, Montana - ID
+- USA, Nebraska - DL
+- USA, Nebraska - ID
+- USA, Oklahoma - DL
+- USA, Oklahoma - ID
+- Virgin Islands of the United States - DL
+- Virgin Islands of the United States - ID
+
+#### New extracted fields from documents
+- On many documents, `documentAdditionalNumber` and/or `documentOptionalAdditionalNumber` are now exposed as `cardAccessNumber`; some documents use `passportNumber` instead of `documentAdditionalNumber` (see [platform release notes](https://docs.microblink.com/blinkid/release-notes) for the per-document list).
+- Added `parentInfo` support on additional Brazil documents (alien ID, DL, passport).
+- Kyrgyzstan identity card: Cyrillic `firstName`, `lastName`, `nationality`, and `sex`.
+
+### Requirements
+- Flutter **3.44.1** or newer
+- Dart **3.12.1** or newer
+- iOS **16.0** or newer; **Xcode 16.3** or newer (**Swift 6.1** toolchain); Swift Package Manager must be enabled (`flutter config --enable-swift-package-manager`)
+- Android API level **24** or newer; **compileSdk 37**; **targetSdk 37** recommended; **AGP 9.1.0**; **Kotlin 2.2.21**
+- Integrator apps do **not** need Jetpack Compose setup; Compose is used internally by BlinkID UX
+
+### <a name="api-changes-v8002"></a> API changes
+
+#### Country identifier (breaking)
+- Removed `CountryID.virginIslandsBritish`; use `CountryID.britishVirginIslands` (`"britishVirginIslands"`).
+
+#### Session presets
+- Added `sessionPreset` on `BlinkIdSessionSettings` with values `SessionPreset.documentVideo` | `documentPhoto` | `standaloneBarcode` | `verifyCapture`.
+- Added `DocumentVideoUseCase` and `DocumentPhotoUseCase` (scenario, quality, and for video `captureEnvironment`).
+- When `sessionPreset` is set, leave `scanningMode` null to keep the preset scanning mode; set `scanningMode` to override.
+- `scanningSettings` merges module-level overrides onto the preset; `toPlatformMap()` / `toPlatformMergePatch()` include only non-null module keys (and a non-zero `maxAllowedMismatchesPerField`), and each included key sends the **whole module** object from `toJson()` (all Dart defaults for that module), not field-level patches. When the patch is empty, `scanningSettings` is omitted so preset module defaults are not cleared.
+- Manual sessions (no preset) behave as before; `scanningMode` defaults to `automatic` on the bridge when null.
+
+```dart
+final sessionSettings = BlinkIdSessionSettings(
+  sessionPreset: SessionPreset.documentVideo,
+  documentVideoUseCase: DocumentVideoUseCase(
+    scenario: DocumentScenario.general,
+    quality: VideoQualityProfile.balanced,
+    captureEnvironment: VideoCaptureEnvironment.handHeld,
+  ),
+  scanningSettings: BlinkIdScanningSettings(
+    documentCaptureModule: DocumentCaptureModuleSettings(
+      documentImageReturnEnabled: true,
+    ),
+  ),
+);
+```
+
+#### Scanning UX
+- Added `passportOnly` on `BlinkIdScanningUxSettings` (default `false`).
+- Added `helpTooltipShowDelay` and `helpTooltipHideDelay` (milliseconds; `helpTooltipShowDelay` ≤ 0 disables automatic display).
+- Added `allowScanSound` on `BlinkIdScanningUxSettings` (default `true`).
+
+#### Classification enums
+- Added `DocumentTypeID` values: `specifiedResidenceCard`, `goldenCard`, `vehicleOwnershipCertificate`, `byIdCard` (`"byIdCard"`).
+- Added `RegionID.northernIreland` (`"northernIreland"`).
+
+#### Scanning results
+- Added top-level (and per-side VIZ) string results: `vehicleNumber`, `passportNumber`, `trafficParticipantNumber`.
+- Added `FieldType.vehicleNumber`, `FieldType.passportNumber`, `FieldType.trafficParticipantNumber` for redaction.
+
+#### Not exposed in Flutter
+- Android-only customization of passport help/onboarding copy via native `BlinkIdSdkStrings` is **not** bridged in Flutter. On iOS, equivalent copy is customized via bundled localization in the host app. Use native APIs or app localization if you need custom passport help text.
+- Other native-only preset or SDK APIs not mapped to JSON settings continue to require native integration.
+
 ## v8001.0.0
 
 Updated to BlinkID native SDKs **v8001.0.0** (Android & iOS). See also the [platform release notes](https://docs.microblink.com/blinkid/release-notes).

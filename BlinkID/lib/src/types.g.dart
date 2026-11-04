@@ -296,6 +296,9 @@ const _$FieldTypeEnumMap = {
   FieldType.legalStatus: 'legalStatus',
   FieldType.husbandName: 'husbandName',
   FieldType.cardAccessNumber: 'cardAccessNumber',
+  FieldType.vehicleNumber: 'vehicleNumber',
+  FieldType.passportNumber: 'passportNumber',
+  FieldType.trafficParticipantNumber: 'trafficParticipantNumber',
   FieldType.parentFullName: 'parentFullName',
   FieldType.ethnicity: 'ethnicity',
 };
@@ -610,7 +613,7 @@ const _$CountryIDEnumMap = {
   CountryID.uzbekistan: 'uzbekistan',
   CountryID.vanuatu: 'vanuatu',
   CountryID.vaticanCity: 'vaticanCity',
-  CountryID.virginIslandsBritish: 'virginIslandsBritish',
+  CountryID.britishVirginIslands: 'britishVirginIslands',
   CountryID.virginIslandsOfTheUnitedStates: 'virginIslandsOfTheUnitedStates',
   CountryID.wallisAndFutuna: 'wallisAndFutuna',
   CountryID.westernSahara: 'westernSahara',
@@ -663,6 +666,7 @@ const _$RegionIDEnumMap = {
   RegionID.newMexico: 'newMexico',
   RegionID.newSouthWales: 'newSouthWales',
   RegionID.newYork: 'newYork',
+  RegionID.northernIreland: 'northernIreland',
   RegionID.northernTerritory: 'northernTerritory',
   RegionID.northCarolina: 'northCarolina',
   RegionID.northDakota: 'northDakota',
@@ -868,6 +872,10 @@ const _$DocumentTypeIDEnumMap = {
   DocumentTypeID.gendarmerieId: 'gendarmerieId',
   DocumentTypeID.policeId: 'policeId',
   DocumentTypeID.originCard: 'originCard',
+  DocumentTypeID.specifiedResidenceCard: 'specifiedResidenceCard',
+  DocumentTypeID.goldenCard: 'goldenCard',
+  DocumentTypeID.vehicleOwnershipCertificate: 'vehicleOwnershipCertificate',
+  DocumentTypeID.byIdCard: 'byIdCard',
 };
 
 DocumentNumberRedactionSettings _$DocumentNumberRedactionSettingsFromJson(
